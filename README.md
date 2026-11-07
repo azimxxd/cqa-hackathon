@@ -31,7 +31,8 @@ npm start
 | `ORG_API_URL` | URL API организаторов, GET с `group_id` |
 | `LLM_PROVIDER` | `gemini` (по умолчанию) или `ollama` |
 | `GEMINI_API_KEY` | Ключ Gemini, передаётся только заголовком |
-| `GEMINI_MODEL` | `gemini-2.5-flash` |
+| `GEMINI_API_KEYS` | Необязательный пул ключей через запятую, точку с запятой или пробел; имеет приоритет над GEMINI_API_KEY |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` |
 | `GEMINI_MAX_ATTEMPTS` | `4`, включая первую HTTP-попытку |
 | `GEMINI_MAX_BACKOFF_MS` | `30000`, максимум задержки, включая `retry-after` |
 | `GEMINI_THINKING_BUDGET` | Необязательный бюджет thinking для Gemini 2.5 |
@@ -42,6 +43,10 @@ npm start
 | `AI_CACHE_DIR` | Необязательный кеш самостоятельного ИИ/eval; сервер его обходит |
 | `PRICE_INPUT_PER_M` / `PRICE_OUTPUT_PER_M` | `0.3` / `2.5`, коэффициенты расчётной стоимости за миллион токенов; задайте по своему тарифу |
 | `CQA_FAKE_LLM` | `1` включает явные детерминированные результаты `FAKE`, без модели и затрат |
+
+Заданная модель не заменяется автоматически при 404: запрос завершится явной
+ошибкой. Для смены модели измените GEMINI_MODEL. Пул ключей ротируется в пределах
+GEMINI_MAX_ATTEMPTS; смены модели при ротации нет.
 
 Версия промпта берётся из `ai/prompt.js` (экспортируется через `ai/evaluate.js`).
 Переменная окружения `PROMPT_VERSION` больше не используется. Порог первой реакции
@@ -56,6 +61,7 @@ npm start
 npm test
 node server/verify-start.js
 node scripts/e2e-stub.js
+node eval/edge_cases.js  # проверка пограничных случаев с заглушками
 npx -y node@22.13.0 --test
 ```
 
