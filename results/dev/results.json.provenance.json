@@ -1,0 +1,477 @@
+{
+  "created_at": "2026-11-07T19:47:56.213Z",
+  "dataset": "DEV",
+  "group_id": "DEV",
+  "model": "ollama/qwen3.6:35b-a3b",
+  "prompt_version": "v16",
+  "config_id": "dd44888cd12e5fb7796bbf16a814ce4bab5bb50aa2b0039e86cf61ddf4348c0d",
+  "evaluation_config": {
+    "revision": 1,
+    "samples": 1,
+    "sampleTemperature": 0.7,
+    "ollamaThink": false,
+    "ollamaNumCtx": 16384,
+    "geminiThinkingBudget": null
+  },
+  "checklist_version_id": 1,
+  "source": "final",
+  "result_sha256": "cf2a697e8291aadc1afaad6e431edfe9d2f2c26aa8bcd499c359d3b4864efe57",
+  "input_sha256": "7311f19010932804b1fd3391d50a311dd8699a04e8441e756ae94a8b51c0b455",
+  "evaluations": [
+    {
+      "conversation_id": "p1-ru-001",
+      "evaluation_id": 66,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.958Z"
+    },
+    {
+      "conversation_id": "p1-ru-002",
+      "evaluation_id": 67,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.958Z"
+    },
+    {
+      "conversation_id": "p1-ru-003",
+      "evaluation_id": 68,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.958Z"
+    },
+    {
+      "conversation_id": "p1-ru-004",
+      "evaluation_id": 69,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-005",
+      "evaluation_id": 70,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-006",
+      "evaluation_id": 71,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-007",
+      "evaluation_id": 72,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-008",
+      "evaluation_id": 73,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-009",
+      "evaluation_id": 74,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-010",
+      "evaluation_id": 75,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-011",
+      "evaluation_id": 76,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-012",
+      "evaluation_id": 77,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-013",
+      "evaluation_id": 78,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-014",
+      "evaluation_id": 79,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-015",
+      "evaluation_id": 80,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-016",
+      "evaluation_id": 81,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-017",
+      "evaluation_id": 82,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-018",
+      "evaluation_id": 83,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-019",
+      "evaluation_id": 84,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-020",
+      "evaluation_id": 85,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-021",
+      "evaluation_id": 86,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-022",
+      "evaluation_id": 87,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-023",
+      "evaluation_id": 88,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-024",
+      "evaluation_id": 89,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-025",
+      "evaluation_id": 90,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-026",
+      "evaluation_id": 91,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-027",
+      "evaluation_id": 92,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-028",
+      "evaluation_id": 93,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-029",
+      "evaluation_id": 94,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-ru-030",
+      "evaluation_id": 95,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-001",
+      "evaluation_id": 96,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-002",
+      "evaluation_id": 97,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-003",
+      "evaluation_id": 98,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-004",
+      "evaluation_id": 99,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-005",
+      "evaluation_id": 100,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-006",
+      "evaluation_id": 101,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-007",
+      "evaluation_id": 102,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-008",
+      "evaluation_id": 103,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-009",
+      "evaluation_id": 104,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-010",
+      "evaluation_id": 105,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-011",
+      "evaluation_id": 106,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-012",
+      "evaluation_id": 107,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-013",
+      "evaluation_id": 108,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-014",
+      "evaluation_id": 109,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-kz-015",
+      "evaluation_id": 110,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-001",
+      "evaluation_id": 111,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-002",
+      "evaluation_id": 112,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-003",
+      "evaluation_id": 113,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-004",
+      "evaluation_id": 114,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-005",
+      "evaluation_id": 115,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-006",
+      "evaluation_id": 116,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-007",
+      "evaluation_id": 117,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-008",
+      "evaluation_id": 118,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-009",
+      "evaluation_id": 119,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-010",
+      "evaluation_id": 120,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-011",
+      "evaluation_id": 121,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-012",
+      "evaluation_id": 122,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-013",
+      "evaluation_id": 123,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-014",
+      "evaluation_id": 124,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p1-en-015",
+      "evaluation_id": 125,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p4-ru-003",
+      "evaluation_id": 126,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p4-ru-002",
+      "evaluation_id": 127,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p4-ru-001",
+      "evaluation_id": 128,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p4-ru-005",
+      "evaluation_id": 129,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    },
+    {
+      "conversation_id": "p4-ru-004",
+      "evaluation_id": 130,
+      "status": "done",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "created_at": "2026-11-07T19:41:25.959Z"
+    }
+  ]
+}
