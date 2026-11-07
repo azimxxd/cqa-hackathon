@@ -15,6 +15,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { buildMetrics } from "./metrics.js";
+import { datasetRecords } from "./dataset.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
@@ -48,7 +49,7 @@ const limit =
 
 async function loadDataset(group) {
   const file = path.join(root, "data", `${group.toLowerCase()}.json`);
-  if (existsSync(file)) return JSON.parse(readFileSync(file, "utf8"));
+  if (existsSync(file)) return datasetRecords(JSON.parse(readFileSync(file, "utf8")));
   const base = process.env.ORG_API_URL;
   if (!base) throw new Error(`No ${file} and ORG_API_URL is not set`);
   const url = new URL(base);
@@ -57,8 +58,9 @@ async function loadDataset(group) {
   const json = await res.json();
   if (!json.isSuccess) throw new Error(`API error: ${json.error}`);
   mkdirSync(path.dirname(file), { recursive: true });
-  writeFileSync(file, JSON.stringify(json.data.records, null, 1));
-  return json.data.records;
+  const records = datasetRecords(json);
+  writeFileSync(file, JSON.stringify(records, null, 1));
+  return records;
 }
 
 const checklist = JSON.parse(
