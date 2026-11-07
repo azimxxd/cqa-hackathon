@@ -32,18 +32,21 @@ export async function generate({
   user,
   schema,
   model = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite",
+  temperature = 0,
+  seed = 7,
+  config,
 }) {
   const keys = getKeys();
   const maxAttempts = Number(process.env.GEMINI_MAX_ATTEMPTS ?? 4);
   const generationConfig = {
-    temperature: 0,
+    temperature,
     topP: 1,
-    seed: 7,
+    seed,
     responseMimeType: "application/json",
     ...(schema ? { responseSchema: schema } : {}),
   };
-  const budget = process.env.GEMINI_THINKING_BUDGET;
-  if (budget !== undefined && budget !== "" && /2\.5/.test(model))
+  const budget = config ? config.geminiThinkingBudget : process.env.GEMINI_THINKING_BUDGET;
+  if (budget != null && budget !== "" && /2\.5/.test(model))
     generationConfig.thinkingConfig = { thinkingBudget: Number(budget) };
   const body = {
     systemInstruction: { parts: [{ text: system }] },

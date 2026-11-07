@@ -9,3 +9,34 @@ export function datasetRecords(input) {
     throw Error("Dataset conversation IDs must be nonempty and unique");
   return records;
 }
+
+/** Official composition per dataset (organizer guide): checked right after import. */
+export const EXPECTED_COMPOSITION = {
+  DEV: { total: 65, channel: { "agent chat": 60, "voice call": 5 }, language: { RU: 35, KZ: 15, EN: 15 } },
+  PROD: { total: 10, channel: { "agent chat": 10 } },
+};
+
+export function datasetComposition(records) {
+  const out = { total: records.length, channel: {}, language: {} };
+  for (const r of records) {
+    out.channel[r.channel] = (out.channel[r.channel] || 0) + 1;
+    out.language[r.language] = (out.language[r.language] || 0) + 1;
+  }
+  return out;
+}
+
+/** Returns human-readable warnings; empty array means the import looks official. */
+export function compositionWarnings(records, dataset) {
+  const expected = EXPECTED_COMPOSITION[String(dataset || "").toUpperCase()];
+  if (!expected) return [];
+  const actual = datasetComposition(records), warnings = [];
+  if (actual.total !== expected.total) warnings.push(`total ${actual.total}, expected ${expected.total}`);
+  for (const key of ["channel", "language"]) {
+    if (!expected[key]) continue;
+    const names = new Set([...Object.keys(expected[key]), ...Object.keys(actual[key])]);
+    for (const name of names)
+      if ((actual[key][name] || 0) !== (expected[key][name] || 0))
+        warnings.push(`${key} ${name}: ${actual[key][name] || 0}, expected ${expected[key][name] || 0}`);
+  }
+  return warnings;
+}

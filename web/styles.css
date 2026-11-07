@@ -2168,3 +2168,20 @@ body:has(> #cqa-root) {
 .cqa .cqa-score-ledger #assessment-basis:empty {
   display: none;
 }
+.cqa .cqa-review-flag {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid #ead7ce;
+  background: #fbf3ef;
+  border-radius: 6px;
+  color: #9f6c5a;
+}
+.cqa .cqa-review-flag > .cqa-icon {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-top: 2px;
+}

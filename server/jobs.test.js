@@ -287,7 +287,7 @@ test("restart rejects queued jobs whose pinned model or prompt settings changed"
     try {
       const job = await finish(service, job_id);
       assert.equal(job.status, "error");
-      assert.match(job.errors[0].error, /модель\/версия промпта изменились/);
+      assert.match(job.errors[0].error, /модель\/версия промпта.*изменились/);
       const e = getEvaluation(db, 1);
       assert.equal(e.model, "m1");
       assert.equal(e.prompt_key, "v1|frt=180");

@@ -23,6 +23,9 @@ export async function generate({
   user,
   schema,
   model = process.env.OLLAMA_MODEL || "qwen2.5:14b",
+  temperature = 0,
+  seed = 7,
+  config,
 }) {
   const url = (process.env.OLLAMA_URL || "http://localhost:11434").replace(
     /\/$/,
@@ -45,8 +48,10 @@ export async function generate({
       body: JSON.stringify({
         model,
         stream: false,
+        // Hybrid thinking models (Qwen3.x) think by default; the schema already has a reasoning field.
+        think: config ? config.ollamaThink : process.env.OLLAMA_THINK === "1",
         format: schema ? toPlainSchema(schema) : "json",
-        options: { temperature: 0, seed: 7, num_ctx: 16384 },
+        options: { temperature, seed, num_ctx: config ? config.ollamaNumCtx : Number(process.env.OLLAMA_NUM_CTX || 16384) },
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },

@@ -1,3 +1,5 @@
+import { evaluationConfig, configHash, sampleCount } from "./config.js";
+export { sampleCount } from "./config.js";
 // Owner: Алдияр. Contract in shared/schemas.md.
 // Builds the prompt from the checklist version (never hardcode criteria), calls the provider,
 // validates the answer (ids exist, scale value allowed, N/A only if na_allowed), retries once.
@@ -11,14 +13,14 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { buildPrompt, responseSchema, PROMPT_VERSION } from "./prompt.js";
-import { normalize, validateResult } from "./validate.js";
+import { normalize, validateResult, quoteFlags } from "./validate.js";
 import { FEW_SHOT } from "./fewshot.js";
 import { parseTimestampSec, offsetOf } from "./timing.js";
 
 export { PROMPT_VERSION };
 
-async function getProvider() {
-  const name = (process.env.LLM_PROVIDER || "gemini").toLowerCase();
+async function getProvider(model) {
+  const name = model.startsWith("ollama/") ? "ollama" : "gemini";
   if (name === "ollama") return import("./providers/ollama.js");
   return import("./providers/gemini.js");
 }
@@ -75,7 +77,7 @@ export function toConversation(conv) {
 
 // Optional disk cache: AI_CACHE_DIR=... (key = conversation_id + criterion hash + prompt version + model).
 const memCache = new Map();
-function cacheKey(conv, c, model, meta) {
+function cacheKey(conv, c, model, meta, config) {
   return createHash("sha1")
     .update(
       [
@@ -99,6 +101,7 @@ function cacheKey(conv, c, model, meta) {
         PROMPT_VERSION,
         model,
         c.id === "c06" ? (meta.first_reaction_threshold_sec ?? 180) : null,
+        configHash(config),
       ].join("|"),
     )
     .digest("hex");
@@ -149,11 +152,86 @@ export function parseJson(text) {
   return null;
 }
 
+/** Self-consistency: majority answer for binary/N/A, median for scales; keeps a real sample's explanation. */
+export function aggregate(criterion, samples) {
+  const valid = samples.filter(Boolean);
+  const key = (r) => (r.answer === "na" ? "na" : criterion.type === "scale" ? r.scale_value : r.answer);
+  const counts = new Map();
+  for (const r of valid) counts.set(key(r), (counts.get(key(r)) || 0) + 1);
+  let winner = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  const top = [...counts.values()].sort((a, b) => b - a);
+  if (criterion.type === "scale" && top.length > 1 && top[0] === top[1]) {
+    // Tie on a scale: take the median of numeric samples (lower median, stays on the scale).
+    const nums = valid.filter((r) => r.answer !== "na").map((r) => r.scale_value).sort((a, b) => a - b);
+    if (nums.length) winner = nums[Math.floor((nums.length - 1) / 2)];
+  } else if (top.length > 1 && top[0] === top[1]) winner = key(valid[0]); // binary tie: deterministic first sample
+  const chosen = valid.find((r) => key(r) === winner);
+  return {
+    ...chosen,
+    consistency: { samples: valid.length, agree: valid.filter((r) => key(r) === winner).length },
+  };
+}
+
+async function runModel(conv, criteria, checklistMeta, provider, model, appendCalls, sampling) {
+  const results = new Map();
+  let pending = criteria,
+    feedback = null,
+    details = [];
+  for (let attempt = 0; attempt < 2 && pending.length; attempt++) {
+    const { system, user } = buildPrompt(conv, pending, checklistMeta, {
+      fewShot: FEW_SHOT,
+      feedback,
+    });
+    let resp;
+    try {
+      resp = await provider.generate({
+        system,
+        user,
+        schema: responseSchema(pending),
+        model: model.replace(/^ollama\//, ""),
+        ...sampling,
+      });
+    } catch (error) {
+      appendCalls(error.calls, system, user);
+      throw error; // Provider owns transient retries; second pass is for validation only.
+    }
+    appendCalls(resp.calls || [resp], system, user);
+    const parsed = parseJson(resp.text);
+    const items = Array.isArray(parsed?.results)
+      ? parsed.results
+      : Array.isArray(parsed)
+        ? parsed
+        : [];
+    details = [];
+    for (const c of pending) {
+      const matches = items.filter((x) => x && x.criterion_id === c.id);
+      if (matches.length !== 1) {
+        details.push(`${c.id}: нет результата или дубликат`);
+        continue;
+      }
+      const r = normalize(matches[0], c, conv);
+      const errors = validateResult(r, c, conv);
+      if (errors.length) details.push(...errors);
+      else results.set(c.id, r);
+    }
+    pending = pending.filter((c) => !results.has(c.id));
+    feedback = details.join("; ") || "ответ не является корректным JSON";
+  }
+  if (pending.length)
+    throw Object.assign(Error(`Invalid AI results: ${details.join("; ")}`), {
+      invalidResult: true,
+      criteria: pending.map((c) => c.id),
+      details,
+      partial: [...results.values()],
+    });
+  return results;
+}
+
 /**
  * @param {object} conversation Conversation (shared/schemas.md) or raw organizer record
  * @param {object[]} criteria Criterion[] — all or only changed ones
  * @param {object} checklistMeta {first_reaction_threshold_sec, ...}
- * @param {{noCache?: boolean, provider?: {generate: Function}}} [opts]
+ * @param {{noCache?: boolean, samples?: number, provider?: {generate: Function}}} [opts]
  * @returns {Promise<{results: object[], calls: object[]}>}
  */
 export async function evaluateConversation(
@@ -162,6 +240,7 @@ export async function evaluateConversation(
   checklistMeta = {},
   opts = {},
 ) {
+  const config = evaluationConfig(opts.config ?? { samples: opts.samples });
   const conv = toConversation(conversation);
   const model = checklistMeta.model ?? modelName();
   const results = new Map();
@@ -171,7 +250,7 @@ export async function evaluateConversation(
   for (const c of criteria) {
     const hit = opts.noCache
       ? null
-      : cacheGet(cacheKey(conv, c, model, checklistMeta));
+      : cacheGet(cacheKey(conv, c, model, checklistMeta, config));
     if (
       hit &&
       validateResult({ ...hit, criterion_id: c.id }, c, conv).length === 0
@@ -194,62 +273,25 @@ export async function evaluateConversation(
   };
   try {
     if (todo.length) {
-      const provider = opts.provider ?? (await getProvider());
-      let pending = todo,
-        feedback = null,
-        details = [];
-      for (let attempt = 0; attempt < 2 && pending.length; attempt++) {
-        const { system, user } = buildPrompt(conv, pending, checklistMeta, {
-          fewShot: FEW_SHOT,
-          feedback,
-        });
-        let resp;
-        try {
-          resp = await provider.generate({
-            system,
-            user,
-            schema: responseSchema(pending),
-            model: model.replace(/^ollama\//, ""),
-          });
-        } catch (error) {
-          appendCalls(error.calls, system, user);
-          throw error; // Provider owns transient retries; second pass is for validation only.
-        }
-        appendCalls(resp.calls || [resp], system, user);
-        const parsed = parseJson(resp.text);
-        const items = Array.isArray(parsed?.results)
-          ? parsed.results
-          : Array.isArray(parsed)
-            ? parsed
-            : [];
-        details = [];
-        for (const c of pending) {
-          const matches = items.filter((x) => x && x.criterion_id === c.id);
-          if (matches.length !== 1) {
-            details.push(`${c.id}: нет результата или дубликат`);
-            continue;
-          }
-          const r = normalize(matches[0], c, conv);
-          const errors = validateResult(r, c, conv);
-          if (errors.length) details.push(...errors);
-          else results.set(c.id, r);
-        }
-        pending = pending.filter((c) => !results.has(c.id));
-        feedback = details.join("; ") || "ответ не является корректным JSON";
-      }
-      if (pending.length)
-        throw Object.assign(
-          Error(`Invalid AI results: ${details.join("; ")}`),
-          {
-            invalidResult: true,
-            criteria: pending.map((c) => c.id),
-            details,
-            partial: [...results.values()],
-          },
+      const provider = opts.provider ?? (await getProvider(model));
+      const samples = config.samples;
+      const runs = [];
+      for (let i = 0; i < samples; i++)
+        runs.push(
+          runModel(conv, todo, checklistMeta, provider, model, appendCalls, { config, temperature: i === 0 ? 0 : config.sampleTemperature, seed: 7 + i }),
         );
+      const settled = await Promise.allSettled(runs);
+      const ok = settled.filter((s) => s.status === "fulfilled").map((s) => s.value);
+      if (!ok.length) throw settled[0].reason;
+      for (const c of todo) {
+        const r = samples > 1 ? aggregate(c, ok.map((run) => run.get(c.id))) : ok[0].get(c.id);
+        if (samples > 1) r.consistency.requested = samples;
+        const flags = quoteFlags(r, conv);
+        results.set(c.id, flags.length ? { ...r, review_flags: flags } : r);
+      }
       if (!opts.noCache)
         for (const c of todo)
-          cacheSet(cacheKey(conv, c, model, checklistMeta), results.get(c.id));
+          cacheSet(cacheKey(conv, c, model, checklistMeta, config), results.get(c.id));
     }
     return {
       results: criteria.map((c) => results.get(c.id)),

@@ -122,7 +122,7 @@ function criterionCard(c, ev, appeals, role) {
     ? open ? `<button class="cqa-text-button button-Xsm" data-review="${e(open.id)}">Рассмотреть апелляцию${icon("arrow-up-right")}</button>` : ""
     : `<button class="cqa-text-button button-Xsm" data-appeal="${e(c.id)}" ${open ? "disabled" : ""}>${open ? "Апелляция открыта" : "Оспорить оценку"}${icon("arrow-up-right")}</button>`;
   const changed = JSON.stringify(row.original) !== JSON.stringify(row.final);
-  return `<details class="cqa-criterion cqa-result-${tone}" ${negative || partial ? "open" : ""}><summary><span class="cqa-result-icon">${icon(tone === "negative" ? "x" : tone === "partial" ? "warning-circle" : tone === "neutral" ? "dots-three" : "check")}</span><span class="cqa-criterion-title"><span class="title-4">${e(c.title)}</span><span class="caption-5 cqa-muted">${c.gross_error ? "Без баллов" : `Баллы: ${score(row.points)} · вес ${score(row.effective_weight)}%`}</span></span><span class="cqa-answer caption-3">${e(resultLabel(c, r))}</span>${icon("caret-down", "cqa-details-chevron")}</summary><div class="cqa-criterion-body"><p class="body-6">${e(r.explanation)}</p><div class="cqa-evidence">${(r.evidence_ids || []).map((id) => `<button class="cqa-evidence-chip caption-4" data-evidence="${e(id)}">${icon("chat-circle-text")}${e(id)}${icon("arrow-up-right")}</button>`).join("")}${r.checked_range ? `<button class="cqa-range caption-4" data-range-from="${e(r.checked_range.from)}" data-range-to="${e(r.checked_range.to)}">${icon("list-checks")}Участок ${e(r.checked_range.from)} – ${e(r.checked_range.to)}</button>` : ""}</div><div class="cqa-criterion-footer">${changed ? `<span class="caption-5 cqa-reviewed">${icon("check-circle")}Изменено проверяющим</span>` : open ? '<span class="caption-5 cqa-muted">Апелляция на рассмотрении</span>' : "<span></span>"}${appealAction}</div>${changed ? `<p class="cqa-original caption-5 cqa-muted">Ответ модели: ${e(resultLabel(c, row.original))}. ${e(row.original.explanation)}</p>` : ""}</div></details>`;
+  return `<details class="cqa-criterion cqa-result-${tone}" ${negative || partial ? "open" : ""}><summary><span class="cqa-result-icon">${icon(tone === "negative" ? "x" : tone === "partial" ? "warning-circle" : tone === "neutral" ? "dots-three" : "check")}</span><span class="cqa-criterion-title"><span class="title-4">${e(c.title)}</span><span class="caption-5 cqa-muted">${c.gross_error ? "Без баллов" : `Баллы: ${score(row.points)} · вес ${score(row.effective_weight)}%`}</span></span><span class="cqa-answer caption-3">${e(resultLabel(c, r))}</span>${icon("caret-down", "cqa-details-chevron")}</summary><div class="cqa-criterion-body"><p class="body-6">${e(r.explanation)}</p>${reviewNotes(r)}<div class="cqa-evidence">${(r.evidence_ids || []).map((id) => `<button class="cqa-evidence-chip caption-4" data-evidence="${e(id)}">${icon("chat-circle-text")}${e(id)}${icon("arrow-up-right")}</button>`).join("")}${r.checked_range ? `<button class="cqa-range caption-4" data-range-from="${e(r.checked_range.from)}" data-range-to="${e(r.checked_range.to)}">${icon("list-checks")}Участок ${e(r.checked_range.from)} – ${e(r.checked_range.to)}</button>` : ""}</div><div class="cqa-criterion-footer">${changed ? `<span class="caption-5 cqa-reviewed">${icon("check-circle")}Изменено проверяющим</span>` : open ? '<span class="caption-5 cqa-muted">Апелляция на рассмотрении</span>' : "<span></span>"}${appealAction}</div>${changed ? `<p class="cqa-original caption-5 cqa-muted">Ответ модели: ${e(resultLabel(c, row.original))}. ${e(row.original.explanation)}</p>` : ""}</div></details>`;
 }
 export function appealsPage(s) {
   const open = s.appeals.filter((a) => a.status === "open");
@@ -197,4 +197,14 @@ export function statsPage(s) {
     .join(
       "",
     )}</dl><p class="caption-5 cqa-muted">Для импортированных оценок Algos токены и стоимость API не измерялись. Статистика вызовов включает неудачные попытки. Полностью кешированные оценки не входят в среднюю стоимость вызовов.</p></section></div>`;
+}
+
+// B2/B1: code-side checks are shown, never applied — the reviewer decides.
+export function reviewNotes(r) {
+  const flags = Array.isArray(r?.review_flags) ? [...r.review_flags] : [];
+  const c = r?.consistency;
+  if (c && c.requested > c.samples) flags.push(`успешных ответов модели ${c.samples} из ${c.requested}`);
+  const split = c && c.samples > 1 && c.agree < c.samples;
+  if (!flags.length && !split) return "";
+  return `<div class="cqa-review-flag caption-5">${icon("warning-circle")}<span><strong>Требует проверки.</strong> ${flags.map(e).join("; ")}${split ? `${flags.length ? "; " : ""}согласие прогонов ${c.agree}/${c.samples}` : ""}</span></div>`;
 }

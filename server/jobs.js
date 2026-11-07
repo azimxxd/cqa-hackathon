@@ -1,3 +1,4 @@
+import { evaluationConfig, configHash } from "../ai/config.js";
 import { createHash, randomUUID } from "node:crypto";
 import {
   evaluateConversation,
@@ -43,6 +44,8 @@ const transcriptHash = (messages) =>
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export function createJobService(db, options = {}) {
+  const config = evaluationConfig(options.config);
+  const configId = configHash(config);
   const fake = options.fake ?? process.env.CQA_FAKE_LLM === "1";
   const model = options.model ?? (fake ? "fake" : modelName());
   const promptVersion =
@@ -54,9 +57,10 @@ export function createJobService(db, options = {}) {
     const base = criterion.id === "c06"
       ? promptKey(checklist)
       : `${promptVersion}|frt=independent`;
+    const configured = `${base}|config=${configId}`;
     return item.transcript_source === "gemini"
-      ? `${base}|transcript_source=gemini|transcript_hash=${item.transcript_hash}`
-      : base;
+      ? `${configured}|transcript_source=gemini|transcript_hash=${item.transcript_hash}`
+      : `${configured}|transcript_hash=${item.transcript_hash}`;
   };
   const evaluate =
     options.evaluate ?? (fake ? fakeEvaluate : evaluateConversation);
@@ -122,12 +126,12 @@ export function createJobService(db, options = {}) {
     if (evaluation.status === "done") return; // COMMIT may have preceded the last job persist.
     const data = JSON.parse(evaluation.data);
     if (
-      item.model !== model ||
+      item.model !== model || item.config_id !== configId ||
       item.prompt_key !==
         promptKey(getChecklist(db, evaluation.checklist_version_id))
     )
       throw Error(
-        "модель/версия промпта изменились с момента постановки; поставьте оценку заново",
+        "модель/версия промпта/настройки оценки изменились с момента постановки; поставьте оценку заново",
       );
     const conversation = getConversation(db, evaluation.conversation_id),
       checklist = getChecklist(db, evaluation.checklist_version_id);
@@ -136,6 +140,8 @@ export function createJobService(db, options = {}) {
       if (transcriptHash(messages) !== item.transcript_hash)
         throw Error("Queued Gemini transcript no longer matches the original message positions");
       conversation.messages = messages;
+    } else if (transcriptHash(conversation.messages) !== item.transcript_hash) {
+      throw Error("Исходный текст изменился после постановки; поставьте оценку заново");
     }
     db.prepare("UPDATE evaluations SET status='running' WHERE id=?").run(
       evaluation.id,
@@ -183,7 +189,7 @@ export function createJobService(db, options = {}) {
               prompt_version: promptVersion,
               model,
             },
-            { noCache: true },
+            { noCache: true, config },
           );
           logCalls(evaluation.id, response?.calls);
           if (!Array.isArray(response?.results))
@@ -309,7 +315,7 @@ export function createJobService(db, options = {}) {
     };
     transaction(db, () => {
       job.items = items.map(({ id, transcript_items, ...provenance }) => {
-        const data = { prompt_key: promptKey(checklist), ...provenance };
+        const data = { prompt_key: promptKey(checklist), config_id: configId, evaluation_config: config, ...provenance };
         return {
           conversation_id: id,
           evaluation_id: createEvaluation(db, id, versionId, model, data),

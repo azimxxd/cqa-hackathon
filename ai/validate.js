@@ -87,7 +87,7 @@ export function validateResult(r, criterion, conversation) {
     bad("checked_range должен быть объектом или null");
   else if (r.checked_range) {
     const { from, to } = r.checked_range;
-    if (!ids.has(from) || !ids.has(to)) bad("несуществующий checked_range");
+    if (!ids.has(from) || !ids.has(to)) bad(`несуществующий checked_range ${JSON.stringify({ from, to })}; допустимые ID: ${[...ids].join(", ")}`);
     else if (
       messages.findIndex((m) => m.id === from) >
       messages.findIndex((m) => m.id === to)
@@ -107,4 +107,74 @@ export function sanitize(r, criterion, conversation) {
       (id) => ids.has(id),
     ),
   };
+}
+
+// B2: code-side anti-hallucination. Never changes the answer — only returns review flags.
+const norm = (s) =>
+  String(s ?? "")
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+const words = (s) => norm(s).split(" ").filter((w) => w.length > 1);
+const script = (s) => (/[а-яёәғқңөұүһі]/i.test(s) ? "cyr" : /[a-z]/i.test(s) ? "lat" : "other");
+
+/** Quotes in «…», "…" or “…” from explanation; at least 3 words to be worth checking. */
+export function extractQuotes(text) {
+  const out = [];
+  for (const m of String(text ?? "").matchAll(/«([^»]{3,300})»|“([^”]{3,300})”|"([^"]{3,300})"/g)) {
+    const q = (m[1] ?? m[2] ?? m[3]).trim();
+    if (words(q).length >= 3) out.push(q);
+  }
+  return out;
+}
+
+/** Share of the quote's words found, in order-independent form, inside a message. */
+function coverage(quote, text) {
+  const have = new Set(words(text));
+  const need = words(quote);
+  return need.length ? need.filter((w) => have.has(w) || [...have].some((h) => h.length > 4 && w.startsWith(h.slice(0, 5)))).length / need.length : 1;
+}
+
+function verifiable(q, language, messages) {
+  const lang = String(language || "").toUpperCase();
+  if (lang === "EN") return script(q) === "lat";
+  if (lang === "KZ") return /[әғқңөұүһі]/i.test(q);
+  return messages.some((m) => script(m.text) === script(q));
+}
+
+export function quoteFlags(r, conversation) {
+  const flags = [];
+  const messages = conversation.messages || [];
+  const ids = new Set(messages.map((m) => m.id));
+  for (const id of String(r.explanation ?? "").match(/\bm\d{3}\b/g) || [])
+    if (!ids.has(id)) flags.push(`explanation ссылается на несуществующую реплику ${id}`);
+  const referenced = new Set(r.evidence_ids || []);
+  const from = messages.findIndex(m => m.id === r.checked_range?.from);
+  const to = messages.findIndex(m => m.id === r.checked_range?.to);
+  if (from >= 0 && to >= from) for (const m of messages.slice(from, to + 1)) referenced.add(m.id);
+  const evidence = messages.filter(m => referenced.has(m.id));
+  const explanation = String(r.explanation ?? "");
+  let cursor = 0;
+  for (const q of extractQuotes(explanation)) {
+    const position = explanation.indexOf(q, cursor);
+    const prefix = explanation.slice(Math.max(cursor, position - 180), position);
+    cursor = position + q.length;
+    if (!verifiable(q, conversation.language, messages)) continue;
+    const matches = m => norm(m.text).includes(norm(q)) || coverage(q, m.text) >= 0.8;
+    const cited = evidence.filter(matches);
+    if (!cited.length) {
+      flags.push(messages.some(matches)
+        ? `цитата есть в диалоге, но отсутствует в указанных доказательствах: «${q.slice(0, 80)}»`
+        : `цитата не найдена в репликах: «${q.slice(0, 80)}»`);
+      continue;
+    }
+    // Check explicit attribution only; quotations may legitimately describe the client.
+    const roles = [...prefix.matchAll(/(?<!\p{L})(?:оператор|клиент|бот|agent|operator|customer|client|bot)(?!\p{L})/giu)];
+    const last = roles.at(-1)?.[0].toLowerCase();
+    const role = !last ? null : /^(оператор|agent|operator)/.test(last) ? "operator" : /^(клиент|customer|client)/.test(last) ? "client" : "bot";
+    if (role && cited.every(m => m.speaker && m.speaker !== role))
+      flags.push(`автор цитаты не совпадает с указанной ролью ${role}: «${q.slice(0, 80)}»`);
+  }
+  return [...new Set(flags)];
 }
