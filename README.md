@@ -5,7 +5,8 @@
 → пересчёт. Интерфейс работает с сохранёнными данными и реальными API сервера.
 
 План команды — [PLAN.md](PLAN.md), контракт — [shared/schemas.md](shared/schemas.md),
-подробности сервера — [server/README.md](server/README.md).
+подробности сервера — [server/README.md](server/README.md),
+экраны и возможности интерфейса — [web/README.md](web/README.md).
 
 ## Запуск
 
