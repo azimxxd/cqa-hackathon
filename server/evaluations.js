@@ -44,12 +44,25 @@ export function getEvaluation(db, id) {
         sections: {},
       };
 }
-export function createEvaluation(db, conversationId, checklistId, model, data = {}) {
+export function createEvaluation(
+  db,
+  conversationId,
+  checklistId,
+  model,
+  data = {},
+) {
   return Number(
     db
       .prepare(
         "INSERT INTO evaluations(conversation_id,checklist_version_id,status,created_at,model,data) VALUES (?,?,?,?,?,?)",
       )
-      .run(conversationId, checklistId, "queued", now(), model, JSON.stringify(data)).lastInsertRowid,
+      .run(
+        conversationId,
+        checklistId,
+        "queued",
+        now(),
+        model,
+        JSON.stringify(data),
+      ).lastInsertRowid,
   );
 }

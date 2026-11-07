@@ -38,7 +38,10 @@ test("queue retries, limits concurrency and reuses only unchanged criteria acros
     evaluate: async (c, criteria) => {
       attempts++;
       if (attempts === 1)
-        throw Object.assign(Error("rate limited"), { status: 429, retryable: true });
+        throw Object.assign(Error("rate limited"), {
+          status: 429,
+          retryable: true,
+        });
       active++;
       max = Math.max(max, active);
       requested.push(criteria.map((c) => c.id));
@@ -137,11 +140,12 @@ test("N/A policy changes reevaluate only invalid cached criteria without inventi
     model: "test",
     evaluate: async (_c, criteria) => {
       calls++;
-      requested.push(criteria.map(c=>c.id));
+      requested.push(criteria.map((c) => c.id));
       return {
-        results: criteria.map(
-          (c) => ({...mock.criteria.find((r) => r.criterion_id === c.id).original,...(!c.na_allowed && c.id === "c02" ? {answer:"yes"} : {})}),
-        ),
+        results: criteria.map((c) => ({
+          ...mock.criteria.find((r) => r.criterion_id === c.id).original,
+          ...(!c.na_allowed && c.id === "c02" ? { answer: "yes" } : {}),
+        })),
         calls: [],
       };
     },
@@ -212,44 +216,141 @@ test("model and prompt version are independent cache boundaries", async () => {
   }
 });
 
-test('cache reevaluates only c06 for a changed first-reaction threshold and disables AI cache', async()=>{
- const db=openDatabase(':memory:');saveConversations(db,[conversation],'DEV');const requests=[];
- const service=createJobService(db,{model:'test',evaluate:async(_c,criteria,_meta,opts)=>{
-   assert.equal(opts?.noCache,true); requests.push(criteria.map(c=>c.id));
-   return {results:criteria.map(c=>mock.criteria.find(r=>r.criterion_id===c.id).original),calls:[]};
- }});
- try {
-   await finish(service,service.submit({conversation_ids:'all',checklist_version_id:1}).job_id);
-   const v=saveChecklist(db,{...getChecklist(db),first_reaction_threshold_sec:30});
-   assert.equal((await finish(service,service.submit({conversation_ids:'all',checklist_version_id:v.id}).job_id)).status,'done');
-   assert.deepEqual(requests.map(r=>r.length),[8,1]);assert.deepEqual(requests[1],['c06']);
- }finally {await service.close();db.close();}
+test("cache reevaluates only c06 for a changed first-reaction threshold and disables AI cache", async () => {
+  const db = openDatabase(":memory:");
+  saveConversations(db, [conversation], "DEV");
+  const requests = [];
+  const service = createJobService(db, {
+    model: "test",
+    evaluate: async (_c, criteria, _meta, opts) => {
+      assert.equal(opts?.noCache, true);
+      requests.push(criteria.map((c) => c.id));
+      return {
+        results: criteria.map(
+          (c) => mock.criteria.find((r) => r.criterion_id === c.id).original,
+        ),
+        calls: [],
+      };
+    },
+  });
+  try {
+    await finish(
+      service,
+      service.submit({ conversation_ids: "all", checklist_version_id: 1 })
+        .job_id,
+    );
+    const v = saveChecklist(db, {
+      ...getChecklist(db),
+      first_reaction_threshold_sec: 30,
+    });
+    assert.equal(
+      (
+        await finish(
+          service,
+          service.submit({
+            conversation_ids: "all",
+            checklist_version_id: v.id,
+          }).job_id,
+        )
+      ).status,
+      "done",
+    );
+    assert.deepEqual(
+      requests.map((r) => r.length),
+      [8, 1],
+    );
+    assert.deepEqual(requests[1], ["c06"]);
+  } finally {
+    await service.close();
+    db.close();
+  }
 });
 
-test('restart rejects queued jobs whose pinned model or prompt settings changed',async()=>{
- for(const changed of [{model:'m2',promptVersion:'v1'},{model:'m1',promptVersion:'v9'}]) {
-   const db=openDatabase(':memory:');saveConversations(db,[conversation],'DEV');
-   let service=createJobService(db,{fake:true,model:'m1',promptVersion:'v1'});
-   const {job_id}=service.submit({conversation_ids:'all',checklist_version_id:1});await service.close();
-   service=createJobService(db,{fake:true,...changed});
-   try {
-     const job=await finish(service,job_id);assert.equal(job.status,'error');assert.match(job.errors[0].error,/модель\/версия промпта изменились/);
-     const e=getEvaluation(db,1);assert.equal(e.model,'m1');assert.equal(e.prompt_key,'v1|frt=180');
-     assert.equal(db.prepare('SELECT COUNT(*) n FROM criterion_results').get().n,0);
-     assert.equal(db.prepare('SELECT COUNT(*) n FROM llm_calls').get().n,0);
-   }finally {await service.close();db.close();}
- }
+test("restart rejects queued jobs whose pinned model or prompt settings changed", async () => {
+  for (const changed of [
+    { model: "m2", promptVersion: "v1" },
+    { model: "m1", promptVersion: "v9" },
+  ]) {
+    const db = openDatabase(":memory:");
+    saveConversations(db, [conversation], "DEV");
+    let service = createJobService(db, {
+      fake: true,
+      model: "m1",
+      promptVersion: "v1",
+    });
+    const { job_id } = service.submit({
+      conversation_ids: "all",
+      checklist_version_id: 1,
+    });
+    await service.close();
+    service = createJobService(db, { fake: true, ...changed });
+    try {
+      const job = await finish(service, job_id);
+      assert.equal(job.status, "error");
+      assert.match(job.errors[0].error, /модель\/версия промпта изменились/);
+      const e = getEvaluation(db, 1);
+      assert.equal(e.model, "m1");
+      assert.equal(e.prompt_key, "v1|frt=180");
+      assert.equal(
+        db.prepare("SELECT COUNT(*) n FROM criterion_results").get().n,
+        0,
+      );
+      assert.equal(db.prepare("SELECT COUNT(*) n FROM llm_calls").get().n, 0);
+    } finally {
+      await service.close();
+      db.close();
+    }
+  }
 });
 
-test('restart after evaluation commit preserves reviewed final even when job item was not persisted',async()=>{
- const db=openDatabase(':memory:');saveConversations(db,[conversation],'DEV');let service=createJobService(db,{fake:true});
- try {
-   const {job_id}=service.submit({conversation_ids:'all',checklist_version_id:1});await finish(service,job_id);await service.close();
-   const final={...JSON.parse(db.prepare('SELECT final FROM criterion_results WHERE evaluation_id=1 AND criterion_id=?').get('c01').final),answer:'no',checked_range:{from:'m004',to:'m004'},explanation:'reviewed'};
-   db.prepare('UPDATE criterion_results SET final=? WHERE evaluation_id=1 AND criterion_id=?').run(JSON.stringify(final),'c01');
-   const job=JSON.parse(db.prepare('SELECT data FROM jobs WHERE id=?').get(job_id).data);job.items[0].status='running';job.done=0;job.status='running';db.prepare('UPDATE jobs SET data=? WHERE id=?').run(JSON.stringify(job),job_id);
-   service=createJobService(db,{fake:true,model:'different-after-commit'});
-   assert.equal((await finish(service,job_id)).status,'done');assert.equal(getEvaluation(db,1).criteria[0].final.explanation,'reviewed');
-   assert.equal(db.prepare('SELECT COUNT(*) n FROM llm_calls').get().n,1);
- }finally {await service.close();db.close();}
+test("restart after evaluation commit preserves reviewed final even when job item was not persisted", async () => {
+  const db = openDatabase(":memory:");
+  saveConversations(db, [conversation], "DEV");
+  let service = createJobService(db, { fake: true });
+  try {
+    const { job_id } = service.submit({
+      conversation_ids: "all",
+      checklist_version_id: 1,
+    });
+    await finish(service, job_id);
+    await service.close();
+    const final = {
+      ...JSON.parse(
+        db
+          .prepare(
+            "SELECT final FROM criterion_results WHERE evaluation_id=1 AND criterion_id=?",
+          )
+          .get("c01").final,
+      ),
+      answer: "no",
+      checked_range: { from: "m004", to: "m004" },
+      explanation: "reviewed",
+    };
+    db.prepare(
+      "UPDATE criterion_results SET final=? WHERE evaluation_id=1 AND criterion_id=?",
+    ).run(JSON.stringify(final), "c01");
+    const job = JSON.parse(
+      db.prepare("SELECT data FROM jobs WHERE id=?").get(job_id).data,
+    );
+    job.items[0].status = "running";
+    job.done = 0;
+    job.status = "running";
+    db.prepare("UPDATE jobs SET data=? WHERE id=?").run(
+      JSON.stringify(job),
+      job_id,
+    );
+    service = createJobService(db, {
+      fake: true,
+      model: "different-after-commit",
+    });
+    assert.equal((await finish(service, job_id)).status, "done");
+    assert.equal(
+      getEvaluation(db, 1).criteria[0].final.explanation,
+      "reviewed",
+    );
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM llm_calls").get().n, 1);
+  } finally {
+    await service.close();
+    db.close();
+  }
 });

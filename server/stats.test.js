@@ -5,9 +5,9 @@ import { createEvaluation } from "./evaluations.js";
 test("statistics aggregate actual logged calls, tokens, cost and per-evaluation average", () =>
   fixture(async (request, db) => {
     assert.deepEqual((await request("/stats")).body, {
-      evaluations_done:0,
-      evaluations_with_calls:0,
-      avg_cost_per_full_eval:0,
+      evaluations_done: 0,
+      evaluations_with_calls: 0,
+      avg_cost_per_full_eval: 0,
       calls: 0,
       tokens: 0,
       cost_usd: 0,
@@ -30,18 +30,41 @@ test("statistics aggregate actual logged calls, tokens, cost and per-evaluation 
     assert.equal(stats.avg_latency_ms, 200);
   }));
 
-test('full-evaluation cost includes failed attempts and excludes partial or cached evaluations',()=>fixture(async(request,db)=>{
- const full=createEvaluation(db,'mock-ru-001',1,'test',{full_eval:true});
- const failed=createEvaluation(db,'mock-ru-001',1,'test',{full_eval:true});
- const partial=createEvaluation(db,'mock-ru-001',1,'test',{full_eval:false});
- const cached=createEvaluation(db,'mock-ru-001',1,'test',{full_eval:false});
- db.prepare("UPDATE evaluations SET status='done' WHERE id IN (?,?,?)").run(full,partial,cached);
- db.prepare("UPDATE evaluations SET status='error' WHERE id=?").run(failed);
- const insert=db.prepare('INSERT INTO llm_calls(evaluation_id,model,cost_usd,created_at) VALUES (?,?,?,?)');
- for(const [id,cost] of [[full,0.1],[full,0.2],[failed,0.3],[failed,0.4],[partial,0.9]]) insert.run(id,'test',cost,new Date().toISOString());
- const stats=(await request('/stats')).body;
- assert.equal(stats.evaluations_done,3);assert.equal(stats.evaluations_with_calls,3);
- assert.ok(Math.abs(stats.avg_cost_per_full_eval-0.5)<1e-12);
- assert.ok(Math.abs(stats.avg_cost_per_eval-1.9/3)<1e-12);
- assert.ok(Math.abs(stats.cost_usd-1.9)<1e-12);
-}));
+test("full-evaluation cost includes failed attempts and excludes partial or cached evaluations", () =>
+  fixture(async (request, db) => {
+    const full = createEvaluation(db, "mock-ru-001", 1, "test", {
+      full_eval: true,
+    });
+    const failed = createEvaluation(db, "mock-ru-001", 1, "test", {
+      full_eval: true,
+    });
+    const partial = createEvaluation(db, "mock-ru-001", 1, "test", {
+      full_eval: false,
+    });
+    const cached = createEvaluation(db, "mock-ru-001", 1, "test", {
+      full_eval: false,
+    });
+    db.prepare("UPDATE evaluations SET status='done' WHERE id IN (?,?,?)").run(
+      full,
+      partial,
+      cached,
+    );
+    db.prepare("UPDATE evaluations SET status='error' WHERE id=?").run(failed);
+    const insert = db.prepare(
+      "INSERT INTO llm_calls(evaluation_id,model,cost_usd,created_at) VALUES (?,?,?,?)",
+    );
+    for (const [id, cost] of [
+      [full, 0.1],
+      [full, 0.2],
+      [failed, 0.3],
+      [failed, 0.4],
+      [partial, 0.9],
+    ])
+      insert.run(id, "test", cost, new Date().toISOString());
+    const stats = (await request("/stats")).body;
+    assert.equal(stats.evaluations_done, 3);
+    assert.equal(stats.evaluations_with_calls, 3);
+    assert.ok(Math.abs(stats.avg_cost_per_full_eval - 0.5) < 1e-12);
+    assert.ok(Math.abs(stats.avg_cost_per_eval - 1.9 / 3) < 1e-12);
+    assert.ok(Math.abs(stats.cost_usd - 1.9) < 1e-12);
+  }));

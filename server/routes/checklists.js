@@ -40,7 +40,8 @@ export function validateChecklist(body) {
       !Number.isFinite(c.weight) ||
       c.weight < 0 ||
       typeof c.na_allowed !== "boolean" ||
-      (c.na_allowed && (typeof c.na_condition !== "string" || !c.na_condition.trim())) ||
+      (c.na_allowed &&
+        (typeof c.na_condition !== "string" || !c.na_condition.trim())) ||
       typeof c.scores_points !== "boolean" ||
       (c.na_condition != null && typeof c.na_condition !== "string") ||
       (c.gross_error != null && typeof c.gross_error !== "boolean")

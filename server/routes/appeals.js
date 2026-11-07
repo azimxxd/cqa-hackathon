@@ -108,17 +108,27 @@ export function appealRoutes(db) {
           explanation: body.reason,
           answer: body.new_answer ?? null,
           scale_value: body.new_scale_value ?? null,
-          ...(Object.hasOwn(body,"new_evidence_ids") ? {evidence_ids:body.new_evidence_ids} : {}),
-          ...(Object.hasOwn(body,"new_checked_range") ? {checked_range:body.new_checked_range} : {}),
+          ...(Object.hasOwn(body, "new_evidence_ids")
+            ? { evidence_ids: body.new_evidence_ids }
+            : {}),
+          ...(Object.hasOwn(body, "new_checked_range")
+            ? { checked_range: body.new_checked_range }
+            : {}),
         };
         // A reviewer may switch yes to no; retain the evidence window or derive it from cited messages.
-        if (result.answer === "no" && !result.checked_range && !Object.hasOwn(body,"new_checked_range")) {
+        if (
+          result.answer === "no" &&
+          !result.checked_range &&
+          !Object.hasOwn(body, "new_checked_range")
+        ) {
           const messages = getConversation(
             db,
             evaluation.conversation_id,
           ).messages;
-          const evidence = messages.filter((m) =>
-            Array.isArray(result.evidence_ids) && result.evidence_ids.includes(m.id),
+          const evidence = messages.filter(
+            (m) =>
+              Array.isArray(result.evidence_ids) &&
+              result.evidence_ids.includes(m.id),
           );
           if (evidence.length)
             result.checked_range = {

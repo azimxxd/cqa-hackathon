@@ -7,7 +7,15 @@ import { fileURLToPath } from "node:url";
 export const now = () => new Date().toISOString();
 export const criterionHash = (c) =>
   createHash("sha1")
-    .update(JSON.stringify([c.title,c.type,c.description,c.na_condition ?? null,c.scale ?? null]))
+    .update(
+      JSON.stringify([
+        c.title,
+        c.type,
+        c.description,
+        c.na_condition ?? null,
+        c.scale ?? null,
+      ]),
+    )
     .digest("hex");
 export function transaction(db, fn) {
   db.exec("BEGIN IMMEDIATE");
@@ -43,7 +51,11 @@ export function getChecklist(db, id = "latest") {
       : db.prepare("SELECT * FROM checklist_versions WHERE id = ?").get(id);
   if (!row) return null;
   const data = JSON.parse(row.data);
-  return {...data,id:row.id,criteria:data.criteria.map(c=>({...c,hash:criterionHash(c)}))};
+  return {
+    ...data,
+    id: row.id,
+    criteria: data.criteria.map((c) => ({ ...c, hash: criterionHash(c) })),
+  };
 }
 export function openDatabase(
   filename = process.env.CQA_DB_PATH ||

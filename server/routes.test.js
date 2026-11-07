@@ -30,10 +30,16 @@ test("real routes return persisted conversations and immutable checklist version
     assert.equal((await request("/evaluations")).status, 404);
   }));
 
-test('checklist forbids enabling N/A without a nonempty condition',()=>fixture(async request=>{
- const checklist=(await request('/checklists/1')).body;
- for(const na_condition of [null,'','   ']) {
-  const response=await request('/checklists',{...checklist,criteria:[{...checklist.criteria[0],na_allowed:true,na_condition}]});
-  assert.equal(response.status,400);
- }
-}));
+test("checklist forbids enabling N/A without a nonempty condition", () =>
+  fixture(async (request) => {
+    const checklist = (await request("/checklists/1")).body;
+    for (const na_condition of [null, "", "   "]) {
+      const response = await request("/checklists", {
+        ...checklist,
+        criteria: [
+          { ...checklist.criteria[0], na_allowed: true, na_condition },
+        ],
+      });
+      assert.equal(response.status, 400);
+    }
+  }));
