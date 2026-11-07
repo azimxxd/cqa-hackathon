@@ -1,14 +1,35 @@
 <!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CQA — оценка диалогов</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <!-- Single root so the UI can be embedded as a Dynamics 365 HTML web resource -->
-  <div id="cqa-root" class="cqa"></div>
-  <script type="module" src="app.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#181818" />
+    <meta
+      name="description"
+      content="Контроль качества диалогов Freedom Broker: оценки, доказательства, апелляции и версии чек-листа."
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CQA · Контроль качества</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="assets/manrope.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="cqa-root" class="cqa">
+      <p class="cqa-initial body-6" role="status">
+        Загружаем рабочее пространство…
+      </p>
+    </div>
+    <noscript
+      >Для работы с оценками включите JavaScript в настройках
+      браузера.</noscript
+    >
+    <script type="module" src="app.js"></script>
+  </body>
 </html>
