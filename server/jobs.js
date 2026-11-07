@@ -144,8 +144,8 @@ export function createJobService(db, options = {}) {
           model,
         );
       if (cached) {
-        const result = { ...JSON.parse(cached.original), criterion_id: c.id };
         try {
+          const result = { ...JSON.parse(cached.original), criterion_id: c.id };
           validateResult(c, result, conversation);
           results.set(c.id, result);
         } catch {

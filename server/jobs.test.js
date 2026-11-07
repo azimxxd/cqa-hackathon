@@ -354,3 +354,41 @@ test("restart after evaluation commit preserves reviewed final even when job ite
     db.close();
   }
 });
+
+test("malformed cached JSON reevaluates only its criterion without failing the job", async () => {
+  const db = openDatabase(":memory:");
+  saveConversations(db, [conversation], "TEST");
+  const requests = [];
+  const service = createJobService(db, {
+    model: "test",
+    evaluate: async (_conversation, criteria) => {
+      requests.push(criteria.map((c) => c.id));
+      return {
+        results: criteria.map(
+          (c) => mock.criteria.find((r) => r.criterion_id === c.id).original,
+        ),
+        calls: [],
+      };
+    },
+  });
+  try {
+    const submit = () =>
+      finish(
+        service,
+        service.submit({ conversation_ids: "all", checklist_version_id: 1 })
+          .job_id,
+      );
+    assert.equal((await submit()).status, "done");
+    db.prepare(
+      "UPDATE criterion_results SET original=? WHERE evaluation_id=1 AND criterion_id='c01'",
+    ).run('{"criterion_id":');
+    assert.equal((await submit()).status, "done");
+    assert.deepEqual(requests[1], ["c01"]);
+    assert.equal(getEvaluation(db, 2).total, 77.69);
+    assert.equal((await submit()).status, "done");
+    assert.equal(requests.length, 2);
+  } finally {
+    await service.close();
+    db.close();
+  }
+});
