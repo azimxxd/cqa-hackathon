@@ -57,6 +57,7 @@ export function openDatabase(
     mkdirSync(dirname(resolve(filename)), { recursive: true });
   const db = new DatabaseSync(filename);
   db.exec(`PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;
+    CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS conversations (
       conversation_id TEXT PRIMARY KEY, group_id TEXT NOT NULL, channel TEXT NOT NULL,
       language TEXT, audio_url TEXT, created_at TEXT NOT NULL);

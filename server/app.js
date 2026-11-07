@@ -26,14 +26,9 @@ export function createApp(db, options = {}) {
   );
   app.use(express.static(fileURLToPath(new URL("../web", import.meta.url))));
   app.use((err, _req, res, _next) =>
-    res
-      .status(err.status || 500)
-      .json({
-        error:
-          err.status && err.status < 500
-            ? err.message
-            : "Internal server error",
-      }),
+    res.status(err.status || 500).json({
+      error: err.status ? err.message : "Internal server error",
+    }),
   );
   return app;
 }

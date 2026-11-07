@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fixture } from "./test-helpers.js";
+import { fixture } from "./fixtures.js";
 import { createEvaluation } from "./evaluations.js";
 test("statistics aggregate actual logged calls, tokens, cost and per-evaluation average", () =>
   fixture(async (request, db) => {

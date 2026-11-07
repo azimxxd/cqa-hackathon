@@ -65,3 +65,13 @@ test("all N/A gives null and weight changes recalculate", () => {
   assert.equal(scored.original_total, null);
   assert.equal(scored.criteria[0].effective_weight, 100);
 });
+
+test("custom section IDs are treated as data keys", () => {
+  const c = { ...checklist.criteria[0], section: "constructor" };
+  const result = { answer: "yes" };
+  const score = scoreEvaluation(
+    { criteria: [c] },
+    { criteria: [{ criterion_id: c.id, original: result, final: result }] },
+  );
+  assert.deepEqual(score.sections, { constructor: { points: 100, max: 100 } });
+});

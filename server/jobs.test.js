@@ -127,3 +127,85 @@ test("invalid AI answers retry once and are never cached", async () => {
     db.close();
   }
 });
+
+test("N/A policy changes never invent answers or call the model for cached criteria", async () => {
+  const db = openDatabase(":memory:");
+  saveConversations(db, [conversation], "DEV");
+  let calls = 0;
+  const service = createJobService(db, {
+    model: "test",
+    evaluate: async (_c, criteria) => {
+      calls++;
+      return {
+        results: criteria.map(
+          (c) => mock.criteria.find((r) => r.criterion_id === c.id).original,
+        ),
+        calls: [],
+      };
+    },
+  });
+  try {
+    await finish(
+      service,
+      service.submit({ conversation_ids: "all", checklist_version_id: 1 })
+        .job_id,
+    );
+    const checklist = getChecklist(db);
+    checklist.criteria[1].na_allowed = false;
+    const version = saveChecklist(db, checklist);
+    const job = await finish(
+      service,
+      service.submit({
+        conversation_ids: "all",
+        checklist_version_id: version.id,
+      }).job_id,
+    );
+    assert.equal(job.status, "error");
+    assert.match(job.errors[0].error, /N\/A forbidden/);
+    assert.equal(calls, 1);
+  } finally {
+    await service.close();
+    db.close();
+  }
+});
+
+test("model and prompt version are independent cache boundaries", async () => {
+  const db = openDatabase(":memory:");
+  saveConversations(db, [conversation], "DEV");
+  let calls = 0,
+    service;
+  const evaluate = async (_c, criteria) => {
+    calls++;
+    return {
+      results: criteria.map(
+        (c) => mock.criteria.find((r) => r.criterion_id === c.id).original,
+      ),
+      calls: [],
+    };
+  };
+  try {
+    for (const [model, promptVersion] of [
+      ["a", "v1"],
+      ["a", "v2"],
+      ["b", "v2"],
+      ["b", "v2"],
+    ]) {
+      service = createJobService(db, { model, promptVersion, evaluate });
+      assert.equal(
+        (
+          await finish(
+            service,
+            service.submit({ conversation_ids: "all", checklist_version_id: 1 })
+              .job_id,
+          )
+        ).status,
+        "done",
+      );
+      await service.close();
+    }
+    assert.equal(calls, 3);
+  } finally {
+    await service?.close();
+    db.close();
+  }
+});

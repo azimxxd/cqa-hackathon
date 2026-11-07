@@ -63,14 +63,15 @@ export function scoreEvaluation(checklist, evaluation) {
     });
     const denominator = entries.reduce((sum, e) => sum + e.weight, 0);
     const multiplier = denominator ? 100 / denominator : 0;
-    const sections = {};
+    const sections = new Map();
     for (const e of entries) {
       if (e.c.scores_points === false || e.c.gross_error) continue;
-      const section = (sections[e.c.section] ??= { points: 0, max: 0 });
+      const section = sections.get(e.c.section) ?? { points: 0, max: 0 };
+      sections.set(e.c.section, section);
       section.points += e.points * multiplier;
       section.max += e.weight * multiplier;
     }
-    for (const section of Object.values(sections)) {
+    for (const section of sections.values()) {
       section.points = round(section.points);
       section.max = round(section.max);
     }
@@ -78,7 +79,7 @@ export function scoreEvaluation(checklist, evaluation) {
       total: denominator
         ? round(entries.reduce((s, e) => s + e.points, 0) * multiplier)
         : null,
-      sections,
+      sections: Object.fromEntries(sections),
       entries,
       multiplier,
     };

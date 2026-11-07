@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { fixture } from "./test-helpers.js";
+import { fixture } from "./fixtures.js";
 const conversation = JSON.parse(
   readFileSync(new URL("../shared/mocks/conversation.json", import.meta.url)),
 );

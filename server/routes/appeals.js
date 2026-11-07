@@ -105,6 +105,7 @@ export function appealRoutes(db) {
         ).criteria.find((c) => c.id === appeal.criterion_id);
         result = {
           ...row.final,
+          explanation: body.reason,
           answer: body.new_answer ?? null,
           scale_value: body.new_scale_value ?? null,
         };

@@ -8,7 +8,8 @@ const conversation = JSON.parse(
 export async function fixture(fn, options) {
   const db = openDatabase(":memory:");
   saveConversations(db, [conversation], "DEV");
-  const server = createApp(db, options).listen(0);
+  const app = createApp(db, options);
+  const server = app.listen(0);
   await new Promise((r) => server.once("listening", r));
   const request = async (path, body) => {
     const res = await fetch(
@@ -26,6 +27,7 @@ export async function fixture(fn, options) {
   try {
     await fn(request, db);
   } finally {
+    await app.locals.jobs.close();
     await new Promise((r) => server.close(r));
     db.close();
   }

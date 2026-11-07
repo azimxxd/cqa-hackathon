@@ -66,9 +66,6 @@ export function createJobService(db, options = {}) {
     backoff < 0
   )
     throw Error("Invalid LLM queue configuration");
-  db.exec(
-    "CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, data TEXT NOT NULL)",
-  );
   const jobs = new Map(),
     queue = [];
   let active = 0,
