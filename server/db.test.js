@@ -1,8 +1,13 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { openDatabase, getChecklist, saveChecklist, criterionHash } from './db.js';
-test('database seeds immutable checklist versions and semantic hashes', () => {
-  const db = openDatabase(':memory:');
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  openDatabase,
+  getChecklist,
+  saveChecklist,
+  criterionHash,
+} from "./db.js";
+test("database seeds immutable checklist versions and semantic hashes", () => {
+  const db = openDatabase(":memory:");
   try {
     const first = getChecklist(db);
     assert.equal(first.criteria.length, 8);
@@ -13,6 +18,11 @@ test('database seeds immutable checklist versions and semantic hashes', () => {
     assert.notEqual(first.id, second.id);
     assert.equal(first.criteria[0].hash, second.criteria[0].hash);
     assert.equal(getChecklist(db, first.id).criteria[0].weight, 10);
-    assert.notEqual(criterionHash({ ...first.criteria[0], title: 'new' }), first.criteria[0].hash);
-  } finally { db.close(); }
+    assert.notEqual(
+      criterionHash({ ...first.criteria[0], title: "new" }),
+      first.criteria[0].hash,
+    );
+  } finally {
+    db.close();
+  }
 });

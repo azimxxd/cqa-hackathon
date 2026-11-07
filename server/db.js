@@ -1,32 +1,60 @@
-import { DatabaseSync } from 'node:sqlite';
-import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { DatabaseSync } from "node:sqlite";
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const now = () => new Date().toISOString();
-export const criterionHash = c => createHash('sha1').update(
-  c.title + c.type + c.description + (c.na_condition ?? '') + JSON.stringify(c.scale ?? null)
-).digest('hex');
+export const criterionHash = (c) =>
+  createHash("sha1")
+    .update(
+      c.title +
+        c.type +
+        c.description +
+        (c.na_condition ?? "") +
+        JSON.stringify(c.scale ?? null),
+    )
+    .digest("hex");
 export function transaction(db, fn) {
-  db.exec('BEGIN IMMEDIATE');
-  try { const result = fn(); db.exec('COMMIT'); return result; }
-  catch (error) { db.exec('ROLLBACK'); throw error; }
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    const result = fn();
+    db.exec("COMMIT");
+    return result;
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
 export function saveChecklist(db, input) {
   const { id: _id, created_at: _date, ...body } = input;
-  const version = { ...body, created_at: now(), criteria: body.criteria.map(c => ({ ...c, hash: criterionHash(c) })) };
-  const result = db.prepare('INSERT INTO checklist_versions(name, created_at, data) VALUES (?, ?, ?)')
+  const version = {
+    ...body,
+    created_at: now(),
+    criteria: body.criteria.map((c) => ({ ...c, hash: criterionHash(c) })),
+  };
+  const result = db
+    .prepare(
+      "INSERT INTO checklist_versions(name, created_at, data) VALUES (?, ?, ?)",
+    )
     .run(version.name, version.created_at, JSON.stringify(version));
   return { ...version, id: Number(result.lastInsertRowid) };
 }
-export function getChecklist(db, id = 'latest') {
-  const row = id === 'latest' ? db.prepare('SELECT * FROM checklist_versions ORDER BY id DESC LIMIT 1').get()
-    : db.prepare('SELECT * FROM checklist_versions WHERE id = ?').get(id);
+export function getChecklist(db, id = "latest") {
+  const row =
+    id === "latest"
+      ? db
+          .prepare("SELECT * FROM checklist_versions ORDER BY id DESC LIMIT 1")
+          .get()
+      : db.prepare("SELECT * FROM checklist_versions WHERE id = ?").get(id);
   return row ? { ...JSON.parse(row.data), id: row.id } : null;
 }
-export function openDatabase(filename = process.env.CQA_DB_PATH || fileURLToPath(new URL('../data/cqa.db', import.meta.url))) {
-  if (filename !== ':memory:') mkdirSync(dirname(resolve(filename)), { recursive: true });
+export function openDatabase(
+  filename = process.env.CQA_DB_PATH ||
+    fileURLToPath(new URL("../data/cqa.db", import.meta.url)),
+) {
+  if (filename !== ":memory:")
+    mkdirSync(dirname(resolve(filename)), { recursive: true });
   const db = new DatabaseSync(filename);
   db.exec(`PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;
     CREATE TABLE IF NOT EXISTS conversations (
@@ -62,6 +90,15 @@ export function openDatabase(filename = process.env.CQA_DB_PATH || fileURLToPath
       action TEXT NOT NULL CHECK(action IN ('confirm', 'change')), new_answer TEXT,
       new_scale_value REAL, reason TEXT NOT NULL, decided_at TEXT NOT NULL);
   `);
-  if (!getChecklist(db)) saveChecklist(db, JSON.parse(readFileSync(new URL('../shared/checklist.default.json', import.meta.url), 'utf8')));
+  if (!getChecklist(db))
+    saveChecklist(
+      db,
+      JSON.parse(
+        readFileSync(
+          new URL("../shared/checklist.default.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    );
   return db;
 }
