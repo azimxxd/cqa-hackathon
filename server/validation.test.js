@@ -28,7 +28,7 @@ test("server and AI validators agree on the complete CriterionResult contract", 
       { answer: "na", scale_value: 7 },
     ])
       cases.push([c, { ...r, ...patch }, false]);
-    cases.push([c, { ...r, answer: "na", scale_value: null }, c.na_allowed]);
+    cases.push([c, { ...r, answer: "na", scale_value: null, checked_range: null }, c.na_allowed]);
     cases.push([
       c,
       { ...r, answer: "no", scale_value: null, checked_range: null },

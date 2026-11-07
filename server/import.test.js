@@ -11,6 +11,17 @@ import {
 const sample = JSON.parse(
   readFileSync(new URL("../shared/mocks/conversation.json", import.meta.url)),
 );
+test("organizer group/count mismatch is rejected before changing conversations or source manifest", async () => {
+  const db = openDatabase(":memory:");
+  try {
+    for (const metadata of [{ dataset_group_id: "DIFFERENT", total_records: 1 }, { dataset_group_id: "DEV", total_records: 2 }]) {
+      await assert.rejects(importGroup(db, "DEV", { url: "https://organizer.example/records", fetchImpl: async () =>
+        Response.json({ isSuccess: true, data: { ...metadata, records: [sample] } }) }), /group or record count/);
+      assert.equal(db.prepare("SELECT count(*) n FROM conversations").get().n, 0);
+      assert.equal(db.prepare("SELECT count(*) n FROM official_group_members").get().n, 0);
+    }
+  } finally { db.close(); }
+});
 test("import assigns stable IDs, preserves timestamps, rejects changing existing content atomically", () => {
   const db = openDatabase(":memory:");
   try {

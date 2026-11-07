@@ -7,6 +7,7 @@ import { checklistRoutes } from "./routes/checklists.js";
 import { evaluationRoutes } from "./routes/evaluations.js";
 import { createJobService } from "./jobs.js";
 import { jobRoutes } from "./routes/jobs.js";
+import { submissionRoutes } from "./routes/submission.js";
 export function createApp(db, options = {}) {
   const jobs = createJobService(db, options.jobs);
 
@@ -20,6 +21,7 @@ export function createApp(db, options = {}) {
     conversationRoutes(db),
     checklistRoutes(db),
     evaluationRoutes(db),
+    submissionRoutes(db),
   );
   app.use("/api", (_req, res) =>
     res.status(404).json({ error: "Route not found" }),

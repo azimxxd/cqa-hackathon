@@ -183,8 +183,17 @@ export async function importGroup(
     body.data;
   if (!Array.isArray(list))
     throw fail(502, "Organizers API must return a conversations array");
+  if ((body.data?.dataset_group_id !== undefined && body.data.dataset_group_id !== groupId) ||
+      (body.data?.total_records !== undefined && body.data.total_records !== list.length))
+    throw fail(502, "Organizers dataset group or record count does not match the request");
   try {
-    return saveConversations(db, list, groupId);
+    const imported = saveConversations(db, list, groupId);
+    transaction(db, () => {
+      db.prepare("DELETE FROM official_group_members WHERE group_id=?").run(groupId);
+      const mark = db.prepare("INSERT INTO official_group_members(group_id,conversation_id) VALUES (?,?)");
+      for (const record of list) mark.run(groupId, record.conversation_id);
+    });
+    return imported;
   } catch (cause) {
     if (cause.status === 409) throw cause;
     throw fail(502, `Invalid import: ${cause.message}`);

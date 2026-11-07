@@ -69,6 +69,9 @@ export function openDatabase(
     CREATE TABLE IF NOT EXISTS conversations (
       conversation_id TEXT PRIMARY KEY, group_id TEXT NOT NULL, channel TEXT NOT NULL,
       language TEXT, audio_url TEXT, created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS official_group_members (
+      group_id TEXT NOT NULL, conversation_id TEXT NOT NULL,
+      PRIMARY KEY(group_id, conversation_id));
     CREATE TABLE IF NOT EXISTS messages (
       conversation_id TEXT NOT NULL REFERENCES conversations(conversation_id), id TEXT NOT NULL,
       idx INTEGER NOT NULL, timestamp TEXT NOT NULL, offset_sec REAL NOT NULL,

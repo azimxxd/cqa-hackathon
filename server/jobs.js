@@ -12,9 +12,6 @@ import { fail, positiveId } from "./http.js";
 
 // Explicit opt-in only. Fake results are labelled and isolated from the real model cache.
 export async function fakeEvaluate(conversation, criteria) {
-  const range = conversation.messages.length
-    ? { from: conversation.messages[0].id, to: conversation.messages.at(-1).id }
-    : null;
   const results = criteria.map((c) => ({
     criterion_id: c.id,
     answer: c.type === "scale" ? null : "yes",
@@ -22,8 +19,8 @@ export async function fakeEvaluate(conversation, criteria) {
       c.type === "scale" ? Math.max(...c.scale.map((s) => s.value)) : null,
     explanation:
       "FAKE: deterministic server test result; not an AI assessment.",
-    evidence_ids: [],
-    checked_range: range,
+    evidence_ids: conversation.messages.length ? [conversation.messages[0].id] : [],
+    checked_range: null,
   }));
   return {
     results,

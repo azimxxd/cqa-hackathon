@@ -108,10 +108,15 @@ test("appeal cycle preserves original and atomically changes final; invalid deci
     },
   ));
 
-test("reviewer supplies evidence and checked range for a no answer with no previous evidence", () =>
+test("reviewer supplies evidence and checked range for a historical answer with no previous evidence", () =>
   fixture(
     async (request, db) => {
       await evaluate(request);
+      // Simulate an old persisted score predating strict evidence validation.
+      const legacy = db.prepare("SELECT evaluation_id,original,final FROM criterion_results WHERE criterion_id='c01'").get();
+      const withoutEvidence = text => JSON.stringify({ ...JSON.parse(text), evidence_ids: [], checked_range: null });
+      db.prepare("UPDATE criterion_results SET original=?,final=? WHERE evaluation_id=? AND criterion_id='c01'")
+        .run(withoutEvidence(legacy.original), withoutEvidence(legacy.final), legacy.evaluation_id);
       const before = (await request("/evaluations")).body;
       const appeal = (
         await request("/appeals", {
@@ -166,12 +171,7 @@ test("reviewer supplies evidence and checked range for a no answer with no previ
       jobs: {
         model: "test",
         evaluate: async (_c, criteria) => ({
-          results: criteria.map((c) => ({
-            ...mock.criteria.find((r) => r.criterion_id === c.id).original,
-            ...(c.id === "c01"
-              ? { evidence_ids: [], checked_range: null }
-              : {}),
-          })),
+          results: criteria.map((c) => mock.criteria.find((r) => r.criterion_id === c.id).original),
           calls: [],
         }),
       },

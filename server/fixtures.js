@@ -22,7 +22,7 @@ export async function fixture(fn, options) {
             body: JSON.stringify(body),
           },
     );
-    return { status: res.status, body: await res.json() };
+    return { status: res.status, headers: Object.fromEntries(res.headers), body: await res.json() };
   };
   try {
     await fn(request, db);

@@ -36,12 +36,14 @@ export function validateResult(criterion, result, conversation) {
   const ids = new Set(conversation.messages.map((m) => m.id));
   if (
     result.criterion_id !== criterion.id ||
-    typeof result.explanation !== "string" ||
+    typeof result.explanation !== "string" || !result.explanation.trim() ||
     !Array.isArray(result.evidence_ids) ||
     result.evidence_ids.some((id) => typeof id !== "string" || !ids.has(id))
   )
     throw new Error("Invalid criterion result or evidence");
   const range = result.checked_range;
+  if (!result.evidence_ids.length && !(criterion.gross_error && result.answer === "no") && !(result.answer === "no" && range))
+    throw new Error("Criterion result requires transcript evidence");
   if (result.answer === "no" && !criterion.gross_error && !range)
     throw new Error("checked_range required for no");
   if (

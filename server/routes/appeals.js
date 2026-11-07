@@ -115,6 +115,10 @@ export function appealRoutes(db) {
             ? { checked_range: body.new_checked_range }
             : {}),
         };
+        if (!Object.hasOwn(body, "new_checked_range") &&
+            (result.answer === "yes" || result.answer === "na" ||
+             (criterion.type === "scale" && result.scale_value === Math.max(...criterion.scale.map(s => s.value)))))
+          result.checked_range = null;
         // A reviewer may switch yes to no; retain the evidence window or derive it from cited messages.
         if (
           result.answer === "no" &&
