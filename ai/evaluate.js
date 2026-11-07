@@ -86,7 +86,7 @@ export async function evaluateConversation(conversation, criteria, checklistMeta
   const todo = [];
   for (const c of criteria) {
     const hit = opts.noCache ? null : cacheGet(cacheKey(conv, c, model, checklistMeta));
-    if (hit) results.set(c.id, hit); else todo.push(c);
+    if (hit && validateResult({...hit,criterion_id:c.id},c,conv).length === 0) results.set(c.id,{...hit,criterion_id:c.id}); else todo.push(c);
   }
 
   const appendCalls = (records, system, user) => {

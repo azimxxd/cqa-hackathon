@@ -3,7 +3,7 @@
 // Tags and attachments are ignored (official rule for c06).
 
 const ATTACHMENT_RE = /^\s*(\[[^\]]*\]|<[^>]*>|#\S+(\s+#\S+)*)\s*$/u;
-const WAIT_RE = /(подождите|ожидайте|прошу\s+ожидать|одну\s+минуту|минуту[,]?\s+пожалуйста|сейчас\s+(проверю|уточню|посмотрю)|күте\s+тұрыңыз|бір\s+(минут|сәт)|one\s+moment|please\s+(hold|wait)|let\s+me\s+check)/iu;
+const WAIT_RE = /(подождите|ожидайте|прошу\s+ожидать|одну\s+минуту|(?:^|[.!?]\s*)минуту(?:[,.!?]|$)|минуту[,]?\s+пожалуйста|сейчас\s+(проверю|уточню|посмотрю)|күте\s+тұрыңыз|бір\s+(минут|сәт)|one\s+moment|please\s+(hold|wait)|let\s+me\s+check)/iu;
 const HANDOFF_RE = /(перевед[её]н.*оператор|перевод.*оператор|эскалаци|передан.*оператор|transfer.*(agent|operator)|escalat|операторға.*(ауыстыр|беріл))/iu;
 export const LONG_PAUSE_THRESHOLD_SEC = 60;
 

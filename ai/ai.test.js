@@ -108,3 +108,8 @@ test('eval score excludes gross-error points even when they have a nonzero weigh
  const criteria=structuredClone(checklist.criteria);criteria[7].weight=100;criteria[7].scores_points=true;
  assert.equal(totalScore(mockEval.criteria.map(r=>r.original),criteria),77.69);
 });
+
+test('timing recognizes a brief standalone wait promise',()=>{
+ const c={messages:[{id:'m001',timestamp:'00:00',speaker:'operator',text:'Минуту.'},{id:'m002',timestamp:'02:00',speaker:'operator',text:'Готово'}]};
+ assert.equal(computeTiming(c).long_pauses[0].warned,true);
+});

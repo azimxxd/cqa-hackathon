@@ -41,3 +41,11 @@ test('evidence normalization supports strings and discards other non-arrays',()=
  const c=load('checklist.default.json').criteria[0],conv=load('mocks/conversation.json');
  for(const [value,expected] of [['m004',['m004']],[42,[]],[{},[]],[null,[]]]) assert.deepEqual(normalize({criterion_id:c.id,evidence_ids:value},c,conv).evidence_ids,expected);
 });
+
+test('standalone cache revalidates N/A policy changes with the same semantic hash',()=>stub(async()=>{
+ const c=load('checklist.default.json').criteria[1],conv={...load('mocks/conversation.json'),conversation_id:'standalone-na-policy'};let n=0;
+ globalThis.fetch=async()=>{n++;return Response.json({candidates:[{content:{parts:[{text:JSON.stringify({results:[{criterion_id:c.id,answer:n===1?'na':'yes',scale_value:null,explanation:'synthetic',evidence_ids:[],checked_from:null,checked_to:null}]})}]}}]});};
+ await evaluateConversation(conv,[c]);
+ const response=await evaluateConversation(conv,[{...c,na_allowed:false}]);
+ assert.equal(n,2);assert.equal(response.results[0].answer,'yes');
+}));
