@@ -9,7 +9,10 @@
     "start": "node --env-file-if-exists=.env server/index.js",
     "dev": "node --watch --env-file-if-exists=.env server/index.js",
     "test": "node --test",
-    "eval": "node --env-file-if-exists=.env eval/run.js"
+    "eval": "node --env-file-if-exists=.env eval/run.js",
+    "submission:export": "node --env-file-if-exists=.env scripts/export-results.js",
+    "submission:validate": "node scripts/validate-results.js",
+    "assessment:import": "node scripts/import-algos-assessment.js"
   },
   "dependencies": {
     "express": "^4.21.2"

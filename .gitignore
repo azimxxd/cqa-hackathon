@@ -5,6 +5,7 @@ data/*.db-*
 .DS_Store
 data/*.json
 data/ai-cache/
+data/algos-assessments/
 eval/reports/
 eval/.cache/
 eval/data/
