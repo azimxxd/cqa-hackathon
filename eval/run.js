@@ -2,13 +2,13 @@
 // per-criterion agreement and MAE of the total. Labels use the CriterionResult shape.
 //
 // Usage: npm run eval -- [--only p1-ru-001,p1-kz-003] [--limit 20] [--no-cache] [--concurrency 6]
-// DEV data is cached in eval/data/dev.json (fetched from ORG_API_URL with group_id=DEV if missing).
-// Model answers are cached in eval/.cache (AI_CACHE_DIR) so re-runs only pay for changed prompts.
+// DEV data is cached in data/dev.json (fetched from ORG_API_URL with group_id=DEV if missing).
+// Model answers are cached in data/ai-cache (AI_CACHE_DIR) so re-runs only pay for changed prompts.
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { totalScore, grossError, labelOf } from './score.js';
+import { buildMetrics } from './metrics.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -65,11 +65,11 @@ async function worker() {
     const id = ids[next++];
     const rec = records.find((r) => r.conversation_id === id);
     try {
-      const { results, calls } = await evaluateConversation(rec, criteria, meta, { noCache: args['no-cache'] });
-      rows.push({ id, results, calls });
+      const response = await evaluateConversation(rec, criteria, meta, { noCache: args['no-cache'] });
+      rows.push({ id, ...response });
       process.stdout.write('.');
     } catch (e) {
-      rows.push({ id, error: e.message });
+      rows.push({ id, error: e.message, calls:e.calls || [], cached_count:e.cached_count || 0, evaluated_criteria:e.evaluated_criteria || [] });
       process.stdout.write('E');
     }
   }
@@ -77,53 +77,9 @@ async function worker() {
 await Promise.all(Array.from({ length: conc }, worker));
 console.log(`\nDone in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 
-// ---- metrics
-const perCrit = Object.fromEntries(criteria.map((c) => [c.id, { agree: 0, n: 0, misses: [] }]));
-let absErr = 0, nTotal = 0, grossAgree = 0, nGross = 0;
-const calls = rows.flatMap((r) => r.calls || []);
-const details = [];
-for (const row of rows.sort((a, b) => a.id.localeCompare(b.id))) {
-  if (row.error) { details.push({ id: row.id, error: row.error }); continue; }
-  const gt = labels.get(row.id);
-  for (const c of criteria) {
-    const g = gt.find((x) => x.criterion_id === c.id);
-    if (!g) continue;
-    const pred = labelOf(row.results.find((x) => x.criterion_id === c.id), c);
-    const exp = labelOf(g, c);
-    perCrit[c.id].n++;
-    if (pred === exp) perCrit[c.id].agree++;
-    else perCrit[c.id].misses.push({ id: row.id, expected: exp, got: pred, explanation: row.results.find((x) => x.criterion_id === c.id)?.explanation, note: g.note });
-  }
-  const tp = totalScore(row.results, criteria, meta.rounding);
-  const tg = totalScore(gt, criteria, meta.rounding);
-  if (tp != null && tg != null) { absErr += Math.abs(tp - tg); nTotal++; }
-  nGross++; if (grossError(row.results, criteria) === grossError(gt, criteria)) grossAgree++;
-  details.push({ id: row.id, total_pred: tp, total_gt: tg });
-}
-
-const sum = (k) => calls.reduce((a, c) => a + (c[k] || 0), 0);
-const evaluated = rows.filter((r) => !r.error && r.calls?.length).length;
 const report = {
-  at: new Date().toISOString(),
-  model: modelName(),
-  prompt_version: PROMPT_VERSION,
-  conversations: ids.length,
-  errors: rows.filter((r) => r.error).length,
-  per_criterion: Object.fromEntries(Object.entries(perCrit).map(([k, v]) => [k, { accuracy: v.n ? +(v.agree / v.n).toFixed(3) : null, n: v.n }])),
-  overall_criterion_accuracy: +(Object.values(perCrit).reduce((a, v) => a + v.agree, 0) / Math.max(1, Object.values(perCrit).reduce((a, v) => a + v.n, 0))).toFixed(3),
-  total_mae: nTotal ? +(absErr / nTotal).toFixed(2) : null,
-  gross_error_accuracy: nGross ? +(grossAgree / nGross).toFixed(3) : null,
-  cost: {
-    calls: calls.length,
-    input_tokens: sum('input_tokens'),
-    output_tokens: sum('output_tokens'),
-    cost_usd: +sum('cost_usd').toFixed(4),
-    avg_cost_per_eval_usd: evaluated ? +(sum('cost_usd') / evaluated).toFixed(5) : null,
-    avg_latency_ms: calls.length ? Math.round(sum('latency_ms') / calls.length) : null,
-    note: 'only uncached conversations are counted',
-  },
-  totals: details,
-  misses: Object.fromEntries(Object.entries(perCrit).map(([k, v]) => [k, v.misses])),
+  at: new Date().toISOString(), model:modelName(),prompt_version:PROMPT_VERSION,
+  ...buildMetrics(rows,labels,criteria),
 };
 
 const outDir = path.join(here, 'reports');
@@ -135,7 +91,7 @@ writeFileSync(path.join(outDir, 'latest.json'), JSON.stringify(report, null, 2))
 console.log('\nCriterion  accuracy   n');
 for (const [k, v] of Object.entries(report.per_criterion)) console.log(`${k.padEnd(10)} ${String(v.accuracy).padEnd(9)}  ${v.n}`);
 console.log(`overall    ${report.overall_criterion_accuracy}`);
-console.log(`total MAE  ${report.total_mae}   gross-error acc ${report.gross_error_accuracy}   errors ${report.errors}`);
+console.log(`total MAE  ${report.total_mae}   gross-error acc ${report.gross_error_accuracy}   errors ${report.errors}; cached answers ${report.cached_answers}`);
 console.log(`cost       $${report.cost.cost_usd} for ${report.cost.calls} calls; ~$${report.cost.avg_cost_per_eval_usd}/evaluation; avg ${report.cost.avg_latency_ms} ms/call`);
 for (const [k, list] of Object.entries(report.misses)) for (const m of list) console.log(`  ✗ ${k} ${m.id}: expected ${m.expected}, got ${m.got} — ${m.explanation?.slice(0, 140)}`);
 console.log(`\nReport: eval/reports/${stamp}.json`);
