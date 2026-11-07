@@ -1,5 +1,7 @@
 // Owner: Азамат. Entry point: serves web/ as static files and mounts /api.
 import express from 'express';
+import { openDatabase } from './db.js';
+const db = openDatabase();
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { mockRouter } from './routes/mock.js';
