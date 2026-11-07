@@ -199,6 +199,7 @@ ID присваиваются по порядку, исходный timestamp с
 | POST | `/api/evaluate` | `{conversation_ids: [...] \| "all", checklist_version_id}` → `{job_id}` |
 | GET | `/api/jobs/:id` | `{status, done, total, errors}` |
 | GET | `/api/evaluations?conversation_id=&checklist_version_id=` | Evaluation (последняя) |
+| GET | `/api/evaluations/:id` | Evaluation по стабильному ID, включая оценки предыдущих версий |
 | POST | `/api/appeals` | `{evaluation_id, criterion_id, comment}` |
 | GET | `/api/appeals?status=open` | Appeal + фрагмент диалога |
 | POST | `/api/appeals/:id/decision` | ReviewDecision → обновлённая Evaluation |
