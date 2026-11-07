@@ -38,11 +38,11 @@ export function validateResult(criterion, result, conversation) {
     result.criterion_id !== criterion.id ||
     typeof result.explanation !== "string" ||
     !Array.isArray(result.evidence_ids) ||
-    result.evidence_ids.some((id) => !ids.has(id))
+    result.evidence_ids.some((id) => typeof id !== "string" || !ids.has(id))
   )
     throw new Error("Invalid criterion result or evidence");
   const range = result.checked_range;
-  if (result.answer === "no" && !range)
+  if (result.answer === "no" && !criterion.gross_error && !range)
     throw new Error("checked_range required for no");
   if (
     range &&

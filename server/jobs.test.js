@@ -38,7 +38,7 @@ test("queue retries, limits concurrency and reuses only unchanged criteria acros
     evaluate: async (c, criteria) => {
       attempts++;
       if (attempts === 1)
-        throw Object.assign(Error("rate limited"), { status: 429 });
+        throw Object.assign(Error("rate limited"), { status: 429, retryable: true });
       active++;
       max = Math.max(max, active);
       requested.push(criteria.map((c) => c.id));
@@ -99,7 +99,7 @@ test("queue retries, limits concurrency and reuses only unchanged criteria acros
     db.close();
   }
 });
-test("invalid AI answers retry once and are never cached", async () => {
+test("invalid AI answers are never retried by server or cached", async () => {
   const db = openDatabase(":memory:");
   saveConversations(db, [conversation], "DEV");
   let calls = 0;
@@ -117,7 +117,7 @@ test("invalid AI answers retry once and are never cached", async () => {
         .job_id,
     );
     assert.equal(job.status, "error");
-    assert.equal(calls, 2);
+    assert.equal(calls, 1);
     assert.equal(
       db.prepare("SELECT COUNT(*) n FROM criterion_results").get().n,
       0,

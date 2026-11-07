@@ -53,7 +53,7 @@ export function createJobService(db, options = {}) {
   const concurrency = Number(
     options.concurrency ?? process.env.LLM_CONCURRENCY ?? 6,
   );
-  const retries = Number(options.retries ?? process.env.LLM_RETRIES ?? 3);
+  const retries = Number(options.retries ?? process.env.LLM_RETRIES ?? 1);
   const backoff = Number(
     options.backoffMs ?? process.env.LLM_BACKOFF_MS ?? 1000,
   );
@@ -164,20 +164,7 @@ export function createJobService(db, options = {}) {
           break;
         } catch (error) {
           if (error.calls) logCalls(evaluation.id, error.calls);
-          const status = Number(
-            error.status ?? error.statusCode ?? error.response?.status,
-          );
-          const retryable =
-            status === 429 ||
-            status >= 500 ||
-            ["ECONNRESET", "ETIMEDOUT", "EAI_AGAIN"].includes(error.code) ||
-            error.invalidResult;
-          if (
-            !retryable ||
-            attempt >= retries ||
-            (error.invalidResult && attempt >= 1)
-          )
-            throw error;
+          if (error.retryable !== true || error.invalidResult || attempt >= retries) throw error;
           await sleep(backoff * 2 ** attempt);
         }
       }
