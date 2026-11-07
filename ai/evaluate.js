@@ -1,8 +1,14 @@
 // Owner: Алдияр. Contract in shared/schemas.md.
 // Builds the prompt from the checklist version (never hardcode criteria), calls the provider,
 // validates the answer (ids exist, scale value allowed, N/A only if na_allowed), retries once.
-import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  renameSync,
+  rmSync,
+} from "node:fs";
 import path from "node:path";
 import { buildPrompt, responseSchema, PROMPT_VERSION } from "./prompt.js";
 import { normalize, validateResult } from "./validate.js";
@@ -77,10 +83,14 @@ function cacheGet(key) {
   const dir = process.env.AI_CACHE_DIR;
   if (dir) {
     const f = path.join(dir, key + ".json");
-    if (existsSync(f)) {
+    try {
       const v = JSON.parse(readFileSync(f, "utf8"));
       memCache.set(key, v);
       return v;
+    } catch (error) {
+      // Interrupted writes and concurrent cache removal are cache misses.
+      if (!(error instanceof SyntaxError) && error.code !== "ENOENT")
+        throw error;
     }
   }
   return null;
@@ -90,7 +100,14 @@ function cacheSet(key, v) {
   const dir = process.env.AI_CACHE_DIR;
   if (dir) {
     mkdirSync(dir, { recursive: true });
-    writeFileSync(path.join(dir, key + ".json"), JSON.stringify(v));
+    const file = path.join(dir, key + ".json");
+    const temporary = `${file}.${randomUUID()}.tmp`;
+    try {
+      writeFileSync(temporary, JSON.stringify(v), { flag: "wx" });
+      renameSync(temporary, file);
+    } finally {
+      rmSync(temporary, { force: true });
+    }
   }
 }
 
