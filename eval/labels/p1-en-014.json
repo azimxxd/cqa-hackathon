@@ -3,11 +3,11 @@
     "criterion_id": "c01",
     "answer": "yes",
     "scale_value": null,
-    "note": "c03=no: disclosed withdrawal restriction without verification (m011, m013); c04=5 ignored m014 question whether they will hear back here"
+    "note": "c03=no: disclosed withdrawal restriction without verification (m011, m013); c04=5 & c06=4 ignored m014 question whether they will hear back here"
   },
   {
     "criterion_id": "c02",
-    "answer": "no",
+    "answer": "na",
     "scale_value": null
   },
   {
@@ -28,7 +28,7 @@
   {
     "criterion_id": "c06",
     "answer": null,
-    "scale_value": 7
+    "scale_value": 4
   },
   {
     "criterion_id": "c07",

@@ -2,7 +2,7 @@
 // transcript with message ids, timing facts from timing.js, dialogue text treated as data.
 import { computeTiming, offsetOf } from './timing.js';
 
-export const PROMPT_VERSION = 'v1';
+export const PROMPT_VERSION = 'v4';
 
 const SYSTEM = `Ты — эксперт службы контроля качества (QA) брокерской компании Freedom Broker.
 Ты оцениваешь работу ОПЕРАТОРА в диалоге с клиентом по чек-листу. Отвечай строго по формулировкам критериев.
@@ -38,7 +38,7 @@ export function renderTranscript(conversation) {
 export function renderCriterion(c) {
   const lines = [`### ${c.id} — ${c.title}`];
   if (c.type === 'scale') {
-    lines.push(`Тип: шкала. Допустимые значения scale_value: ${c.scale.map((s) => s.value).join(', ')}. answer = null${c.na_allowed ? ' (или "na")' : ''}.`);
+    lines.push(`Тип: шкала. Допустимые значения scale_value: ${c.scale.map((s) => s.value).join(', ')}. Поле answer ВСЕГДА равно null${c.na_allowed ? ' (answer="na" только если наступило условие N/A и scale_value=null; если же ты выбрал числовое scale_value — answer ОБЯЗАН быть null)' : ''}.`);
   } else {
     lines.push(`Тип: да/нет. answer = "yes" | "no"${c.na_allowed ? ' | "na"' : ''}; scale_value = null.`);
   }

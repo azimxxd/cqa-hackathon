@@ -19,7 +19,7 @@ async function getProvider() {
 export function modelName() {
   return (process.env.LLM_PROVIDER || 'gemini').toLowerCase() === 'ollama'
     ? `ollama/${process.env.OLLAMA_MODEL || 'qwen2.5:14b'}`
-    : process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    : process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 }
 
 export function costUsd(model, input, output) {

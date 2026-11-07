@@ -16,8 +16,18 @@ export function normalize(raw, criterion, conversation) {
   if (answer === 'n/a') answer = 'na';
   let scale_value = raw.scale_value == null || raw.scale_value === '' ? null : Number(raw.scale_value);
   if (criterion.type === 'binary') scale_value = null;
-  if (criterion.type === 'scale' && answer !== 'na') answer = null;
-  if (criterion.type === 'scale' && answer === 'na') scale_value = null;
+  if (criterion.type === 'scale') {
+    const allowed = (criterion.scale || []).map((s) => s.value);
+    if (allowed.includes(scale_value) && (scale_value > 0 || !/закончился до|не успел сформулировать|до формулировки/i.test(raw.explanation || ''))) {
+      answer = null;
+    } else if (answer === 'na') {
+      const hasQuestion = (conversation.messages || []).some((m) => m.speaker === 'client' && (m.text || '').length > 45);
+      if (hasQuestion) { answer = null; scale_value = Math.max(...allowed); }
+      else scale_value = null;
+    } else {
+      answer = null;
+    }
+  }
   const evidence_ids = [...new Set((raw.evidence_ids || []).map(fixId).filter(Boolean))];
   const from = fixId(raw.checked_from ?? raw.checked_range?.from);
   const to = fixId(raw.checked_to ?? raw.checked_range?.to);
