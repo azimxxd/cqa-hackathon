@@ -2185,3 +2185,195 @@ body:has(> #cqa-root) {
   height: 12px;
   margin-top: 2px;
 }
+
+/* Redesign pass (elayadesign redesign-existing-projects audit, 2026-11-08).
+   One light working surface, one dark chrome band, one accent; quieter repeated UI. */
+.cqa {
+  font-variant-numeric: tabular-nums;
+}
+/* Programmatic focus on headings after navigation is not a keyboard target: no ring. */
+.cqa :is(h1, h2, h3)[tabindex="-1"]:focus,
+.cqa :is(h1, h2, h3)[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+/* Header: brand + nav on the dark band, workspace tools on a quieter sub bar. */
+.cqa .cqa-studio-header {
+  gap: 8px 32px;
+  padding: 12px 24px 0;
+}
+.cqa .cqa-studio-header nav {
+  gap: 4px;
+}
+.cqa .cqa-studio-header .cqa-nav-link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #a5aaa5;
+  transition: color 300ms var(--curve), background-color 300ms var(--curve);
+}
+.cqa .cqa-studio-header .cqa-nav-link:hover {
+  color: #e7e8e7;
+  background: #272727;
+}
+.cqa .cqa-studio-header .cqa-nav-link[aria-current="page"] {
+  color: #e7e8e7;
+  background: #272727;
+  box-shadow: inset 0 -2px 0 var(--accent);
+  border-radius: 8px 8px 0 0;
+}
+.cqa .cqa-studio-toolbar {
+  margin-top: 4px;
+  padding: 8px 0 12px;
+  border-top: 1px solid #272727;
+  gap: 12px;
+}
+.cqa .cqa-studio-header:not(:has(.cqa-studio-toolbar)) {
+  padding-bottom: 12px;
+}
+/* Role switch as one segmented control instead of two loose pills. */
+.cqa .cqa-studio-toolbar [aria-label="Режим работы"] {
+  gap: 0;
+  padding: 2px;
+  border-radius: 8px;
+  background: #272727;
+}
+.cqa .cqa-studio-toolbar [aria-label="Режим работы"] .cqa-studio-chip {
+  border: 0;
+  background: transparent;
+  color: #a5aaa5;
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+.cqa .cqa-studio-toolbar [aria-label="Режим работы"] .cqa-studio-chip[aria-pressed="true"] {
+  background: var(--accent);
+  color: #181818;
+}
+.cqa .cqa-studio-toolbar .cqa-secondary,
+.cqa .cqa-studio-toolbar .cqa-studio-chip {
+  border-color: #313131;
+  background: transparent;
+}
+.cqa .cqa-studio-toolbar .cqa-secondary:hover,
+.cqa .cqa-studio-toolbar .cqa-studio-chip:hover {
+  background: #272727;
+  border-color: #313131;
+}
+.cqa .cqa-studio-toolbar label {
+  color: #a5aaa5;
+}
+.cqa .cqa-studio-toolbar input {
+  background: #272727;
+  border-color: #313131;
+  color: #e7e8e7;
+}
+.cqa .cqa-studio-toolbar .cqa-model-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #a5aaa5;
+}
+.cqa .cqa-studio-toolbar .cqa-model-status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+/* Feed: same light working surface as the rest of the studio. */
+.cqa .cqa-feed {
+  background: #fafbf9;
+  color: var(--ink);
+}
+.cqa .cqa-feed .cqa-version,
+.cqa .cqa-feed .cqa-empty p {
+  color: var(--muted);
+}
+.cqa .cqa-feed-list {
+  gap: 2px;
+}
+.cqa .cqa-feed-item {
+  border: 0;
+  padding: 8px 12px;
+  transition: background-color 300ms var(--curve);
+}
+.cqa .cqa-feed-item > .caption-5 {
+  color: var(--muted);
+}
+.cqa .cqa-feed-item > strong {
+  font-weight: 600;
+}
+.cqa .cqa-feed-item:hover {
+  background: #f0f2ef;
+  border-color: transparent;
+}
+.cqa .cqa-feed-item.is-active {
+  background: #fff;
+  box-shadow: 0 0 0 1px #dce1dd, 0 1px 2px rgba(36, 40, 39, 0.06);
+}
+.cqa .cqa-feed-item.is-active strong {
+  color: var(--green);
+}
+/* "Оценён" on every row is noise: show only states that need attention. */
+.cqa .cqa-feed-item .cqa-status-done {
+  display: none;
+}
+
+/* Transcript: client is the subject, bot is context, operator is the one being judged. */
+.cqa .cqa-stream .cqa-messages {
+  background: #f7f8f6;
+}
+.cqa .cqa-message {
+  background: #fff;
+  border-color: #e4e8e5;
+}
+.cqa .cqa-speaker-bot {
+  background: transparent;
+  border: 1px dashed #dce1dd;
+}
+.cqa .cqa-speaker-bot p {
+  color: var(--muted);
+}
+.cqa .cqa-speaker-operator {
+  background: #edf5e9;
+  border-color: #dbe9cf;
+}
+.cqa .cqa-speaker-system {
+  border: 0;
+}
+
+/* Score panel: elevation only where it means hierarchy. */
+.cqa .cqa-criterion {
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(36, 40, 39, 0.05);
+}
+.cqa .cqa-score-ledger {
+  border-color: transparent;
+  box-shadow: 0 1px 2px rgba(36, 40, 39, 0.05);
+}
+/* Feed filters: one segmented control, same pattern as the role switch. */
+.cqa .cqa-feed [aria-label="Фильтры ленты"] {
+  gap: 0;
+  padding: 2px;
+  border-radius: 8px;
+  background: #eef0ec;
+  width: max-content;
+  max-width: 100%;
+}
+.cqa .cqa-feed [aria-label="Фильтры ленты"] .cqa-studio-chip {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 12px;
+  border-radius: 6px;
+  transition: background-color 300ms var(--curve), color 300ms var(--curve);
+}
+.cqa .cqa-feed [aria-label="Фильтры ленты"] .cqa-studio-chip:hover {
+  color: var(--ink);
+}
+.cqa .cqa-feed [aria-label="Фильтры ленты"] .cqa-studio-chip[aria-pressed="true"] {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(36, 40, 39, 0.08);
+}
