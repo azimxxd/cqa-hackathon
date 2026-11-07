@@ -1,0 +1,43 @@
+[
+  {
+    "criterion_id": "c01",
+    "answer": "yes",
+    "scale_value": null,
+    "note": "не уточнил бумагу/ошибку, не провёл идентификацию, галлюцинировал про биржу (c04=0), «Тогда не знаю» и закрыл чат без прощания (c07=no)"
+  },
+  {
+    "criterion_id": "c02",
+    "answer": "no",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c03",
+    "answer": "no",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c04",
+    "answer": null,
+    "scale_value": 0
+  },
+  {
+    "criterion_id": "c05",
+    "answer": "no",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c06",
+    "answer": null,
+    "scale_value": 4
+  },
+  {
+    "criterion_id": "c07",
+    "answer": "no",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c08",
+    "answer": "no",
+    "scale_value": null
+  }
+]
