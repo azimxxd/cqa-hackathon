@@ -41,14 +41,15 @@ export async function generate({
     maxBackoffMs: Number(process.env.GEMINI_MAX_BACKOFF_MS ?? 30000),
     baseBackoffMs: 2000,
     usage: (json) => ({
-      input_tokens: json.usageMetadata?.promptTokenCount || 0,
+      input_tokens: json?.usageMetadata?.promptTokenCount || 0,
       output_tokens:
-        (json.usageMetadata?.candidatesTokenCount || 0) +
-        (json.usageMetadata?.thoughtsTokenCount || 0),
+        (json?.usageMetadata?.candidatesTokenCount || 0) +
+        (json?.usageMetadata?.thoughtsTokenCount || 0),
     }),
   });
-  const text = (json.candidates?.[0]?.content?.parts || [])
-    .filter((p) => !p.thought)
+  const parts = json?.candidates?.[0]?.content?.parts;
+  const text = (Array.isArray(parts) ? parts : [])
+    .filter((p) => p && !p.thought)
     .map((p) => p.text || "")
     .join("");
   // Empty model output is handled by evaluate's validation retry and keeps its usage log.

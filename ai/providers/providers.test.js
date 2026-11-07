@@ -162,3 +162,31 @@ test("standalone cache revalidates N/A policy changes with the same semantic has
     assert.equal(n, 2);
     assert.equal(response.results[0].answer, "yes");
   }));
+
+test("successful HTTP with malformed Gemini content keeps all logs and gets only a validation retry", () =>
+  stub(async () => {
+    const checklist = load("checklist.default.json"),
+      conv = load("mocks/conversation.json");
+    for (const payload of [
+      null,
+      { candidates: [{ content: { parts: 42 } }] },
+      { candidates: [{ content: { parts: [null] } }] },
+    ]) {
+      let n = 0;
+      globalThis.fetch = async () => {
+        n++;
+        return Response.json(payload);
+      };
+      await assert.rejects(
+        evaluateConversation(conv, checklist.criteria, checklist, {
+          noCache: true,
+        }),
+        (error) => {
+          assert.equal(error.invalidResult, true);
+          assert.equal(error.calls.length, 2);
+          return true;
+        },
+      );
+      assert.equal(n, 2);
+    }
+  }));

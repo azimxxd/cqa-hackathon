@@ -36,8 +36,8 @@ export async function generate({
     maxBackoffMs: Number(process.env.OLLAMA_MAX_BACKOFF_MS ?? 3000),
     baseBackoffMs: 500,
     usage: (json) => ({
-      input_tokens: json.prompt_eval_count || 0,
-      output_tokens: json.eval_count || 0,
+      input_tokens: json?.prompt_eval_count || 0,
+      output_tokens: json?.eval_count || 0,
     }),
     init: {
       method: "POST",
@@ -56,9 +56,9 @@ export async function generate({
   });
   return {
     calls,
-    text: json.message?.content || "",
+    text: json?.message?.content || "",
     model: `ollama/${model}`,
-    input_tokens: json.prompt_eval_count || 0,
-    output_tokens: json.eval_count || 0,
+    input_tokens: json?.prompt_eval_count || 0,
+    output_tokens: json?.eval_count || 0,
   };
 }
