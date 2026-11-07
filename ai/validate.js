@@ -46,7 +46,8 @@ export function validateResult(r, criterion, conversation) {
   const bad = (text) => errs.push(`${criterion.id}: ${text}`);
   if (!r || typeof r !== "object") return [`${criterion.id}: нет результата`];
   if (r.criterion_id !== criterion.id) bad("неверный criterion_id");
-  if (typeof r.explanation !== "string") bad("explanation должна быть строкой");
+  if (typeof r.explanation !== "string" || !r.explanation.trim())
+    bad("explanation должна содержать непустое обоснование");
   if (r.answer === "na") {
     if (!criterion.na_allowed) bad("N/A недопустимо для этого критерия");
     if (r.scale_value != null) bad("N/A не допускает scale_value");
@@ -73,6 +74,12 @@ export function validateResult(r, criterion, conversation) {
     bad(
       `несуществующие или неверные evidence_ids ${JSON.stringify(r.evidence_ids)}`,
     );
+  else if (
+    !(criterion.gross_error && r.answer === "no") &&
+    r.evidence_ids.length === 0 &&
+    !(r.answer === "no" && r.checked_range)
+  )
+    bad("нужно конкретное evidence; checked_range допустим только для пропущенного действия (no)");
   if (
     r.checked_range != null &&
     (typeof r.checked_range !== "object" || Array.isArray(r.checked_range))

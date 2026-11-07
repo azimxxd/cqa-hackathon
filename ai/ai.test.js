@@ -111,6 +111,45 @@ test("validate + sanitize: catches bad ids, scale values, N/A and missing checke
   assert.deepEqual(rScale.evidence_ids, ["m004"]);
 });
 
+test("validation requires useful explanations and transcript support without rejecting justified N/A or checked ranges", () => {
+  const c01 = checklist.criteria[0];
+  const c02 = checklist.criteria[1];
+  const noEvidence = normalize({
+    criterion_id: "c01", answer: "yes", explanation: "Оператор поздоровался.", evidence_ids: [],
+  }, c01, mockConv);
+  assert.ok(validateResult(noEvidence, c01, mockConv).some((e) => e.includes("нужно конкретное evidence")));
+
+  const unsupportedPositive = normalize({
+    criterion_id: "c01", answer: "yes", explanation: "Да", evidence_ids: [],
+    checked_from: mockConv.messages[0].id, checked_to: mockConv.messages[0].id,
+  }, c01, mockConv);
+  assert.ok(validateResult(unsupportedPositive, c01, mockConv)
+    .some((e) => e.includes("нужно конкретное evidence")));
+
+  const positiveWithRange = { ...unsupportedPositive, evidence_ids: [mockConv.messages[0].id] };
+  assert.deepEqual(validateResult(positiveWithRange, c01, mockConv), []);
+
+  const emptyReason = { ...noEvidence, explanation: "  ", evidence_ids: [mockConv.messages[0].id] };
+  assert.ok(validateResult(emptyReason, c01, mockConv).some((e) => e.includes("непустое обоснование")));
+
+  const negativeWithRange = normalize({
+    criterion_id: "c01", answer: "no", explanation: "В первом ответе нет приветствия.",
+    evidence_ids: [], checked_from: mockConv.messages[0].id, checked_to: mockConv.messages[0].id,
+  }, c01, mockConv);
+  assert.deepEqual(validateResult(negativeWithRange, c01, mockConv), []);
+
+  const justifiedNa = normalize({
+    criterion_id: "c02", answer: "na", explanation: "Клиент сразу указал все нужные сведения; уточнение не требовалось.",
+    evidence_ids: [mockConv.messages[0].id],
+  }, c02, mockConv);
+  assert.deepEqual(validateResult(justifiedNa, c02, mockConv), []);
+  assert.deepEqual(validateResult({ ...justifiedNa, checked_range: {
+    from: mockConv.messages[0].id, to: mockConv.messages[0].id,
+  } }, c02, mockConv), []);
+  assert.ok(validateResult({ ...justifiedNa, evidence_ids: [] }, c02, mockConv)
+    .some((e) => e.includes("нужно конкретное evidence")));
+});
+
 test("scoring: matches mock evaluation total (77.69) and handles all-N/A -> null", () => {
   const orig = mockEval.criteria.map((c) => c.original);
   assert.equal(totalScore(orig, checklist.criteria, 2), 77.69);

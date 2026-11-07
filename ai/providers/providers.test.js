@@ -145,7 +145,7 @@ test("standalone cache revalidates N/A policy changes with the same semantic has
                         answer: n === 1 ? "na" : "yes",
                         scale_value: null,
                         explanation: "synthetic",
-                        evidence_ids: [],
+                        evidence_ids: [conv.messages[0].id],
                         checked_from: null,
                         checked_to: null,
                       },
