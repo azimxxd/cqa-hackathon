@@ -13,6 +13,7 @@ import path from "node:path";
 import { buildPrompt, responseSchema, PROMPT_VERSION } from "./prompt.js";
 import { normalize, validateResult } from "./validate.js";
 import { FEW_SHOT } from "./fewshot.js";
+import { parseTimestampSec, offsetOf } from "./timing.js";
 
 export { PROMPT_VERSION };
 
@@ -25,7 +26,7 @@ async function getProvider() {
 export function modelName() {
   return (process.env.LLM_PROVIDER || "gemini").toLowerCase() === "ollama"
     ? `ollama/${process.env.OLLAMA_MODEL || "qwen2.5:14b"}`
-    : process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    : process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 }
 
 export function costUsd(model, input, output) {
@@ -52,13 +53,19 @@ export function criterionHash(c) {
 
 /** Accepts both the stored Conversation shape and the raw organizer record ({transcript:[...]}) */
 export function toConversation(conv) {
-  const src = conv.messages || conv.transcript || [];
+  const src = Array.isArray(conv?.messages)
+    ? conv.messages
+    : Array.isArray(conv?.transcript)
+      ? conv.transcript
+      : [];
+  const first = parseTimestampSec(src[0]?.timestamp);
   return {
     ...conv,
     messages: src.map((m, i) => ({
       ...m,
       id: m.id || "m" + String(i + 1).padStart(3, "0"),
       idx: m.idx ?? i,
+      offset_sec: offsetOf(m, first),
     })),
   };
 }
@@ -70,6 +77,21 @@ function cacheKey(conv, c, model, meta) {
     .update(
       [
         conv.conversation_id,
+        createHash("sha1")
+          .update(
+            JSON.stringify([
+              conv.channel,
+              conv.language,
+              conv.messages.map((m) => [
+                m.id,
+                m.timestamp,
+                m.offset_sec,
+                m.speaker,
+                m.text,
+              ]),
+            ]),
+          )
+          .digest("hex"),
         criterionHash(c),
         PROMPT_VERSION,
         model,
@@ -111,7 +133,7 @@ function cacheSet(key, v) {
   }
 }
 
-function parseJson(text) {
+export function parseJson(text) {
   try {
     return JSON.parse(text);
   } catch {}
@@ -128,7 +150,7 @@ function parseJson(text) {
  * @param {object} conversation Conversation (shared/schemas.md) or raw organizer record
  * @param {object[]} criteria Criterion[] — all or only changed ones
  * @param {object} checklistMeta {first_reaction_threshold_sec, ...}
- * @param {{noCache?: boolean}} [opts]
+ * @param {{noCache?: boolean, provider?: {generate: Function}}} [opts]
  * @returns {Promise<{results: object[], calls: object[]}>}
  */
 export async function evaluateConversation(
@@ -169,7 +191,7 @@ export async function evaluateConversation(
   };
   try {
     if (todo.length) {
-      const provider = await getProvider();
+      const provider = opts.provider ?? (await getProvider());
       let pending = todo,
         feedback = null,
         details = [];
