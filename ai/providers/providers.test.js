@@ -231,3 +231,27 @@ test("Gemini exhausts invalid keys as fatal 403 and never exceeds GEMINI_MAX_ATT
       assert.equal(n, 2);
     }
   }));
+
+
+test("Gemini daily quota fails immediately and exposes its retry time without extra requests", () =>
+  stub(async () => {
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls++;
+      return Response.json({ error: { details: [
+        { "@type": "type.googleapis.com/google.rpc.QuotaFailure", violations: [
+          { quotaId: "GenerateRequestsPerDayPerProjectPerModel-FreeTier" },
+        ] },
+        { "@type": "type.googleapis.com/google.rpc.RetryInfo", retryDelay: "55740s" },
+      ] } }, { status: 429 });
+    };
+    await assert.rejects(gemini({ system: "s", user: "u" }), error => {
+      assert.equal(error.quotaExhausted, true);
+      assert.equal(error.retryable, false);
+      assert.equal(error.fatal, true);
+      assert.equal(error.retryAfterMs, 55740000);
+      assert.equal(error.calls.length, 1);
+      return true;
+    });
+    assert.equal(calls, 1);
+  }));

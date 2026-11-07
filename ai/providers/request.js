@@ -42,12 +42,22 @@ export async function requestJson({
       call.raw_response = raw;
       if (!response.ok) {
         rotate = rotateKey?.(response.status, attempt) === true;
-        const retryable = response.status === 429 || response.status >= 500;
+        let quotaExhausted = false, retryAfterMs;
+        if (provider === "gemini" && response.status === 429) {
+          try {
+            const details = JSON.parse(raw)?.error?.details ?? [];
+            quotaExhausted = details.some(detail => detail.violations?.some(violation =>
+              /PerDay|per day|daily/i.test(`${violation.quotaId ?? ""} ${violation.description ?? ""}`)));
+            const delay = details.find(detail => detail["@type"]?.endsWith("RetryInfo"))?.retryDelay;
+            if (/^\d+(?:\.\d+)?s$/.test(delay ?? "")) retryAfterMs = Math.ceil(parseFloat(delay) * 1000);
+          } catch { /* Non-JSON rate limit errors use the normal bounded retry path. */ }
+        }
+        const retryable = !quotaExhausted && (response.status === 429 || response.status >= 500);
         throw Object.assign(
           Error(
             `${provider === "gemini" ? "Gemini" : "Ollama"} HTTP ${response.status}: ${raw.slice(0, 300)}`,
           ),
-          { status: response.status, retryable, fatal: !retryable, provider },
+          { status: response.status, retryable, fatal: !retryable, provider, quotaExhausted, retryAfterMs },
         );
       }
       let json;

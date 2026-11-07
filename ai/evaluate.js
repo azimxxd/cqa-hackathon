@@ -26,13 +26,13 @@ async function getProvider() {
 export function modelName() {
   return (process.env.LLM_PROVIDER || "gemini").toLowerCase() === "ollama"
     ? `ollama/${process.env.OLLAMA_MODEL || "qwen2.5:14b"}`
-    : process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+    : process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 }
 
 export function costUsd(model, input, output) {
   if (String(model).startsWith("ollama/")) return 0;
-  const pin = Number(process.env.PRICE_INPUT_PER_M?.trim() || 0.3);
-  const pout = Number(process.env.PRICE_OUTPUT_PER_M?.trim() || 2.5);
+  const pin = Number(process.env.PRICE_INPUT_PER_M?.trim() || 0.25);
+  const pout = Number(process.env.PRICE_OUTPUT_PER_M?.trim() || 1.5);
   return +(
     ((Number(input) || 0) * pin + (Number(output) || 0) * pout) /
     1e6

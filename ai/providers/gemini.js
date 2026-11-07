@@ -31,7 +31,7 @@ export async function generate({
   system,
   user,
   schema,
-  model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
+  model = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite",
 }) {
   const keys = getKeys();
   const maxAttempts = Number(process.env.GEMINI_MAX_ATTEMPTS ?? 4);

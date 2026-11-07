@@ -134,7 +134,7 @@ test("merge: blank price settings use defaults while explicit zero remains zero"
   try {
     process.env.PRICE_INPUT_PER_M = "";
     process.env.PRICE_OUTPUT_PER_M = "  ";
-    assert.equal(costUsd("stub", 2000, 500), 0.00185);
+    assert.equal(costUsd("stub", 2000, 500), 0.00125);
     for (const name of names) process.env[name] = "0";
     assert.equal(costUsd("stub", 2000, 500), 0);
   } finally {
