@@ -1,9 +1,10 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   evaluateConversation,
   PROMPT_VERSION,
   modelName,
 } from "../ai/evaluate.js";
+import { alignTranscription } from "../ai/transcription.js";
 import { getChecklist, now, transaction } from "./db.js";
 import { getConversation } from "./import.js";
 import { createEvaluation, getEvaluation } from "./evaluations.js";
@@ -37,6 +38,9 @@ export async function fakeEvaluate(conversation, criteria) {
     ],
   };
 }
+const transcriptHash = (messages) =>
+  createHash("sha256").update(JSON.stringify(messages)).digest("hex");
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export function createJobService(db, options = {}) {
   const fake = options.fake ?? process.env.CQA_FAKE_LLM === "1";
@@ -46,10 +50,14 @@ export function createJobService(db, options = {}) {
   const promptKey = (checklist) =>
     `${promptVersion}|frt=${checklist.first_reaction_threshold_sec ?? 180}`;
   // Timing threshold affects c06 only; unrelated criteria remain reusable.
-  const cacheKey = (checklist, criterion) =>
-    criterion.id === "c06"
+  const cacheKey = (checklist, criterion, item) => {
+    const base = criterion.id === "c06"
       ? promptKey(checklist)
       : `${promptVersion}|frt=independent`;
+    return item.transcript_source === "gemini"
+      ? `${base}|transcript_source=gemini|transcript_hash=${item.transcript_hash}`
+      : base;
+  };
   const evaluate =
     options.evaluate ?? (fake ? fakeEvaluate : evaluateConversation);
   const concurrency = Number(
@@ -123,6 +131,12 @@ export function createJobService(db, options = {}) {
       );
     const conversation = getConversation(db, evaluation.conversation_id),
       checklist = getChecklist(db, evaluation.checklist_version_id);
+    if (item.transcript_source === "gemini") {
+      const messages = alignTranscription(conversation.messages, item.transcript_items);
+      if (transcriptHash(messages) !== item.transcript_hash)
+        throw Error("Queued Gemini transcript no longer matches the original message positions");
+      conversation.messages = messages;
+    }
     db.prepare("UPDATE evaluations SET status='running' WHERE id=?").run(
       evaluation.id,
     );
@@ -137,7 +151,7 @@ export function createJobService(db, options = {}) {
         .get(
           conversation.conversation_id,
           c.hash,
-          cacheKey(checklist, c),
+          cacheKey(checklist, c, item),
           model,
         );
       if (cached) {
@@ -217,7 +231,7 @@ export function createJobService(db, options = {}) {
           evaluation.id,
           c.id,
           c.hash,
-          cacheKey(checklist, c),
+          cacheKey(checklist, c, item),
           model,
           result,
           result,
@@ -283,11 +297,44 @@ export function createJobService(db, options = {}) {
       }
   }
   queueMicrotask(pump);
+  function enqueue(items, versionId, checklist) {
+    if (closing) throw fail(503, "Queue is shutting down");
+    const job = {
+      id: randomUUID(),
+      status: items.length ? "queued" : "done",
+      done: 0,
+      total: items.length,
+      errors: [],
+      items: [],
+    };
+    transaction(db, () => {
+      job.items = items.map(({ id, transcript_items, ...provenance }) => {
+        const data = { prompt_key: promptKey(checklist), ...provenance };
+        return {
+          conversation_id: id,
+          evaluation_id: createEvaluation(db, id, versionId, model, data),
+          model,
+          ...data,
+          ...(transcript_items ? { transcript_items } : {}),
+          status: "queued",
+        };
+      });
+      persist(job);
+    });
+    jobs.set(job.id, job);
+    for (const item of job.items) queue.push({ job, item });
+    queueMicrotask(pump);
+    return { job_id: job.id };
+  }
+
   return {
     submit(body) {
       if (closing) throw fail(503, "Queue is shutting down");
+      const { transcript_source: source = "original" } = body ?? {};
+      if (source !== "original" && source !== "gemini")
+        throw fail(400, "transcript_source must be original or gemini");
       const versionId = positiveId(
-        body.checklist_version_id,
+        body?.checklist_version_id,
         "checklist_version_id",
       );
       const checklist = getChecklist(db, versionId);
@@ -307,33 +354,45 @@ export function createJobService(db, options = {}) {
         new Set(ids).size !== ids.length
       )
         throw fail(400, "conversation_ids must be a unique array or all");
-      for (const id of ids)
-        if (!getConversation(db, id))
-          throw fail(404, `Conversation ${id} not found`);
-      const job = {
-        id: randomUUID(),
-        status: ids.length ? "queued" : "done",
-        done: 0,
-        total: ids.length,
-        errors: [],
-        items: [],
-      };
-      transaction(db, () => {
-        job.items = ids.map((id) => ({
-          conversation_id: id,
-          evaluation_id: createEvaluation(db, id, versionId, model, {
-            prompt_key: promptKey(checklist),
-          }),
-          model,
-          prompt_key: promptKey(checklist),
-          status: "queued",
-        }));
-        persist(job);
+      const conversations = ids.map((id) => {
+        const conversation = getConversation(db, id);
+        if (!conversation) throw fail(404, `Conversation ${id} not found`);
+        return conversation;
       });
-      jobs.set(job.id, job);
-      for (const item of job.items) queue.push({ job, item });
-      queueMicrotask(pump);
-      return { job_id: job.id };
+      const items = conversations.map((conversation) => ({
+        id: conversation.conversation_id,
+        transcript_source: "original",
+        transcription_model: null,
+        transcript_hash: transcriptHash(conversation.messages),
+      }));
+      const voices = source === "gemini"
+        ? conversations.filter((conversation) => conversation.channel === "voice call")
+        : [];
+      if (!voices.length) return enqueue(items, versionId, checklist);
+      return (async () => {
+        const resolved = new Map();
+        for (const conversation of voices) {
+          const id = conversation.conversation_id;
+          const result = await options.resolveTranscription?.(conversation);
+          const unavailable = () => fail(409, `Gemini transcription is missing or stale for ${id}`);
+          if (typeof result?.model !== "string" || !result.model)
+            throw unavailable();
+          let messages;
+          try {
+            messages = alignTranscription(conversation.messages, result.messages);
+          } catch {
+            throw unavailable();
+          }
+          resolved.set(id, {
+            id,
+            transcript_source: "gemini",
+            transcription_model: result.model,
+            transcript_hash: transcriptHash(messages),
+            transcript_items: messages.map(({ id, text }) => ({ id, text })),
+          });
+        }
+        return enqueue(items.map((item) => resolved.get(item.id) ?? item), versionId, checklist);
+      })();
     },
     get(id) {
       const job = jobs.get(id);

@@ -8,16 +8,23 @@ import { evaluationRoutes } from "./routes/evaluations.js";
 import { createJobService } from "./jobs.js";
 import { jobRoutes } from "./routes/jobs.js";
 import { submissionRoutes } from "./routes/submission.js";
+import { transcriptionRoutes } from "./routes/transcription.js";
 export function createApp(db, options = {}) {
-  const jobs = createJobService(db, options.jobs);
+  const transcription = transcriptionRoutes(db, options.transcription);
+  const jobs = createJobService(db, {
+    ...options.jobs,
+    resolveTranscription: transcription.resolveTranscription,
+  });
 
   const app = express();
   app.use(express.json({ limit: "5mb" }));
   app.get("/api/health", (_req, res) => res.json({ ok: true }));
   app.locals.jobs = jobs;
+  app.locals.transcription = transcription;
   app.use("/api", jobRoutes(jobs), appealRoutes(db), statsRoutes(db));
   app.use(
     "/api",
+    transcription.router,
     conversationRoutes(db),
     checklistRoutes(db),
     evaluationRoutes(db),

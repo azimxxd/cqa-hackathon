@@ -7,8 +7,8 @@ const server = app.listen(Number(process.env.PORT) || 3000, () =>
 );
 for (const signal of ["SIGINT", "SIGTERM"])
   process.once(signal, async () => {
-    await app.locals.jobs.close();
-    server.close(() => {
+    server.close(async () => {
+      await Promise.all([app.locals.jobs.close(), app.locals.transcription.close()]);
       db.close();
       process.exit(0);
     });
