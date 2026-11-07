@@ -2,7 +2,7 @@
 // REST generateContent; retries with exponential backoff on 429/5xx/network errors.
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+import { requestJson } from './request.js';
 
 export async function generate({ system, user, schema, model = process.env.GEMINI_MODEL || 'gemini-2.5-flash' }) {
   const key = process.env.GEMINI_API_KEY;
@@ -22,43 +22,14 @@ export async function generate({ system, user, schema, model = process.env.GEMIN
     generationConfig,
   };
 
-  let lastErr;
-  for (let attempt = 0; attempt < 6; attempt++) {
-    try {
-      const res = await fetch(`${BASE}/${model}:generateContent`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(180_000),
-      });
-      if (res.status === 429 || res.status >= 500) {
-        lastErr = new Error(`Gemini HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
-        const ra = Number(res.headers.get('retry-after'));
-        await sleep(ra > 0 ? ra * 1000 : Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000);
-        continue;
-      }
-      const json = await res.json();
-      if (!res.ok) throw Object.assign(new Error(`Gemini HTTP ${res.status}: ${JSON.stringify(json).slice(0, 500)}`), { fatal: true });
-      const cand = json.candidates?.[0];
-      const text = (cand?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || '').join('');
-      const u = json.usageMetadata || {};
-      if (!text) {
-        lastErr = new Error(`Gemini empty response (finishReason=${cand?.finishReason})`);
-        await sleep(1000 * (attempt + 1));
-        continue;
-      }
-      return {
-        text,
-        model,
-        input_tokens: u.promptTokenCount || 0,
-        // thinking tokens are billed as output
-        output_tokens: (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0),
-      };
-    } catch (e) {
-      if (e.fatal) throw e;
-      lastErr = e;
-      await sleep(Math.min(60_000, 2000 * 2 ** attempt));
-    }
-  }
-  throw lastErr;
+  const {json, calls} = await requestJson({
+    provider: 'gemini', url: `${BASE}/${model}:generateContent`, model,
+    init: {method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)},
+    maxAttempts: Number(process.env.GEMINI_MAX_ATTEMPTS ?? 4),
+    maxBackoffMs: Number(process.env.GEMINI_MAX_BACKOFF_MS ?? 30000), baseBackoffMs:2000,
+    usage: json => ({input_tokens:json.usageMetadata?.promptTokenCount || 0,output_tokens:(json.usageMetadata?.candidatesTokenCount || 0)+(json.usageMetadata?.thoughtsTokenCount || 0)}),
+  });
+  const text = (json.candidates?.[0]?.content?.parts || []).filter(p=>!p.thought).map(p=>p.text || '').join('');
+  // Empty model output is handled by evaluate's validation retry and keeps its usage log.
+  return {text,model,input_tokens:calls.at(-1).input_tokens,output_tokens:calls.at(-1).output_tokens,calls};
 }
