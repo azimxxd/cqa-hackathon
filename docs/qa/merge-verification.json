@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-07",
+  "transcription_prompt_version": "3",
+  "original_messages_unchanged": true,
+  "dev_submission_unchanged": true,
+  "transcriptions": [
+    {
+      "conversation_id": "p4-ru-001",
+      "status": "done",
+      "model": "gemini-3.1-flash-lite",
+      "message_count": 45,
+      "changed_text_count": 33,
+      "source_positions_preserved": true,
+      "cached_post_status": 200,
+      "audio_range_status": 206
+    },
+    {
+      "conversation_id": "p4-ru-002",
+      "status": "done",
+      "model": "gemini-3.1-flash-lite",
+      "message_count": 73,
+      "changed_text_count": 60,
+      "source_positions_preserved": true,
+      "cached_post_status": 200,
+      "audio_range_status": 206
+    },
+    {
+      "conversation_id": "p4-ru-003",
+      "status": "done",
+      "model": "gemini-3.1-flash-lite",
+      "message_count": 78,
+      "changed_text_count": 56,
+      "source_positions_preserved": true,
+      "cached_post_status": 200,
+      "audio_range_status": 206
+    },
+    {
+      "conversation_id": "p4-ru-004",
+      "status": "done",
+      "model": "gemini-3.1-flash-lite",
+      "message_count": 115,
+      "changed_text_count": 85,
+      "source_positions_preserved": true,
+      "cached_post_status": 200,
+      "audio_range_status": 206
+    },
+    {
+      "conversation_id": "p4-ru-005",
+      "status": "done",
+      "model": "gemini-3.1-flash-lite",
+      "message_count": 75,
+      "changed_text_count": 64,
+      "source_positions_preserved": true,
+      "cached_post_status": 200,
+      "audio_range_status": 206
+    }
+  ],
+  "live_evaluation": {
+    "status": "done",
+    "errors": [],
+    "source": "gemini",
+    "transcription_model": "gemini-3.1-flash-lite",
+    "model": "gemini-3.1-flash-lite",
+    "criteria": 8,
+    "total": 62.31,
+    "calls": [
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 7238,
+        "output_tokens": 1155
+      },
+      {
+        "model": "gemini-3.1-flash-lite",
+        "input_tokens": 3076,
+        "output_tokens": 211
+      }
+    ]
+  },
+  "automated_tests_passed": 125,
+  "note": "Structural and integration checks; no independent transcription accuracy measurement."
+}

@@ -6,6 +6,8 @@ data/*.db-*
 data/*.json
 data/ai-cache/
 data/algos-assessments/
+data/audio/
+data/transcriptions/
 eval/reports/
 eval/.cache/
 eval/data/
