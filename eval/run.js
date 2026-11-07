@@ -32,6 +32,20 @@ const { values: args } = parseArgs({
   },
 });
 
+function positiveInteger(value, name) {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number < 1)
+    throw Error(`Invalid eval ${name}: expected a positive safe integer`);
+  return number;
+}
+// Validate before loading DEV so bad settings cannot trigger a paid or external run.
+const conc = positiveInteger(
+  args.concurrency ?? process.env.LLM_CONCURRENCY ?? 6,
+  "concurrency",
+);
+const limit =
+  args.limit === undefined ? undefined : positiveInteger(args.limit, "limit");
+
 async function loadDataset(group) {
   const file = path.join(root, "data", `${group.toLowerCase()}.json`);
   if (existsSync(file)) return JSON.parse(readFileSync(file, "utf8"));
@@ -71,13 +85,12 @@ let ids = [...labels.keys()]
   .filter((id) => records.some((r) => r.conversation_id === id))
   .sort();
 if (args.only) ids = ids.filter((id) => args.only.split(",").includes(id));
-if (args.limit) ids = ids.slice(0, Number(args.limit));
+if (limit !== undefined) ids = ids.slice(0, limit);
 if (!ids.length) {
   console.log("No labeled conversations found in eval/labels.");
   process.exit(0);
 }
 
-const conc = Number(args.concurrency || process.env.LLM_CONCURRENCY || 6);
 console.log(
   `Evaluating ${ids.length} conversations with ${modelName()} (prompt ${PROMPT_VERSION}), concurrency ${conc}`,
 );
