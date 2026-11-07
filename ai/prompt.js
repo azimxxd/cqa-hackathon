@@ -3,7 +3,7 @@
 import { computeTiming, offsetOf, resolveT0 } from './timing.js';
 import { buildGuidance } from './fewshot.js';
 
-export const PROMPT_VERSION = 'v12';
+export const PROMPT_VERSION = 'v13';
 
 const SYSTEM = `Ты — строгий эксперт службы контроля качества (QA) брокерской компании Freedom Broker.
 Ты оцениваешь работу ОПЕРАТОРА (speaker=operator) в диалоге с клиентом по чек-листу из блока <criteria>.

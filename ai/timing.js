@@ -4,7 +4,7 @@
 const ATTACHMENT_RE = /^\s*(\[[^\]]*\]|<[^>]*>|#\S+(\s+#\S+)*)\s*$/u;
 const WAIT_RE = /(ожидай|подожд|минут[укы]?|секунд[уочкуы]?|одну минуту|один момент|оставайтесь на линии|(?:сейчас|щас)\s+(?:я\s+)?(?:проверю|уточню|посмотрю|узнаю)|күте тұр|күтіңіз|бір\s+(?:сәт|минут)|қазір\s+(?:мен\s+)?(?:тексер|нақтыла|қара)|please\s+wait|one\s+moment|just\s+a\s+(?:moment|second|minute)|hold\s+on|bear\s+with\s+me|(?:let\s+me|i(?:'ll|\s+will))\s+(?:check|look|verify))/iu;
 const ID_SYS_RE = /(личность клиента подтверждена|клиенттің жеке басы расталды|customer identity verified|идентифицирован)/iu;
-const CALL_ID_RE = /(идентификац|шестизнач|смс|sms|\bиин\b|адрес.*регистрац)/iu;
+const CALL_ID_RE = /(идентификац|шестизнач|смс|sms|\bиин\b|\bваш ин\b|полное имя и адрес|адрес.*регистрац|адрес проживан)/iu;
 const CLOSE_SYS_RE = /(закрыл чат|чат закрыт|чатты жапты|closed the chat|покинул чат|соединение.*прервано|байланыс үзілді|connection.*lost|завершил разговор|ended the call|hung up)/iu;
 
 /** Raw seconds parsed from timestamp (MM:SS, HH:MM:SS, or ISO 8601). */
@@ -163,7 +163,7 @@ export function computeTiming(conversation, thresholdSec = 180) {
     if (IMPERATIVE_CLARIFY_RE.test(t)) return true;
     if (!t.includes('?')) return false;
     const cleaned = t
-      .replace(/(чем могу( вам)? помочь|с чем помочь|как я могу к вам обращаться|дополнительные вопросы|остались.*вопрос|вы на линии|читать умеете)[^?]*\?/giu, '')
+      .replace(/(чем могу( вам)? помочь|с чем помочь|как я могу к вам обращаться|дополнительные вопросы|остались.*вопрос|возникнут какие[- ]либо вопросы|в связи с чем у вас остались|вы на линии|читать умеете)[^?]*\?/giu, '')
       .replace(/[^.?!]*,\s*(верно|да|правильно|так)\?\s*(?=$|[А-ЯA-ZӘІҢҒҮҰҚӨҺ])/gu, '');
     if (!cleaned.includes('?')) return false;
     if (ID_Q_RE.test(cleaned) && !TOPIC_Q_RE.test(cleaned)) return false;
