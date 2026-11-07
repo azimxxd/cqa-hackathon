@@ -15,7 +15,7 @@ test("POST import fetches organizers and exposes saved conversation through GET"
       "TEST",
     );
     res.setHeader("content-type", "application/json");
-    res.end(JSON.stringify({ isSuccess: success, data: [sample] }));
+    res.end(JSON.stringify({ isSuccess: success, data: {records: [{...sample,messages:undefined,transcript:sample.messages}]} }));
   }).listen(0);
   await new Promise((r) => org.once("listening", r));
   const previous = process.env.ORG_API_URL;

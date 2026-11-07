@@ -28,6 +28,7 @@ export function createApp(db, options = {}) {
   app.use((err, _req, res, _next) =>
     res.status(err.status || 500).json({
       error: err.status ? err.message : "Internal server error",
+      ...(err.conflict_ids ? {conflict_ids:err.conflict_ids} : {}),
     }),
   );
   return app;
