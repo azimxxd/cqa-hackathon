@@ -107,3 +107,19 @@ test("appeal cycle preserves original and atomically changes final; invalid deci
       },
     },
   ));
+
+test('reviewer supplies evidence and checked range for a no answer with no previous evidence',()=>fixture(async(request,db)=>{
+ await evaluate(request);
+ const before=(await request('/evaluations')).body;
+ const appeal=(await request('/appeals',{evaluation_id:before.id,criterion_id:'c01',comment:'missed action'})).body;
+ const path=`/appeals/${appeal.id}/decision`;
+ for(const patch of [{new_evidence_ids:['missing']},{new_checked_range:{from:'m009',to:'m001'}},{new_evidence_ids:'m004'}]) {
+  assert.equal((await request(path,{action:'change',new_answer:'no',reason:'review',new_checked_range:{from:'m004',to:'m004'},...patch})).status,400);
+ }
+ const result=await request(path,{action:'change',new_answer:'no',reason:'review',new_evidence_ids:['m004'],new_checked_range:{from:'m004',to:'m004'}});
+ assert.equal(result.status,200);assert.notEqual(result.body.total,before.total);
+ assert.deepEqual(result.body.criteria[0].original,before.criteria[0].original);
+ assert.deepEqual(result.body.criteria[0].final.checked_range,{from:'m004',to:'m004'});
+ assert.deepEqual(result.body.criteria[0].final.evidence_ids,['m004']);
+ assert.equal(db.prepare('SELECT COUNT(*) n FROM review_decisions').get().n,1);
+},{jobs:{model:'test',evaluate:async(_c,criteria)=>({results:criteria.map(c=>({...mock.criteria.find(r=>r.criterion_id===c.id).original,...(c.id==='c01'?{evidence_ids:[],checked_range:null}:{})})),calls:[]})}}));
