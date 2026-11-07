@@ -1,0 +1,13 @@
+[Unit]
+Description=CQA public quick tunnel
+After=network-online.target cqa.service
+Wants=cqa.service
+
+[Service]
+User=ubuntu
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate --url http://localhost:3000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

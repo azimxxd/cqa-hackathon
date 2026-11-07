@@ -33,7 +33,7 @@ npm start                 # http://localhost:3000
 | Локально, Qwen на своём GPU | `LLM_PROVIDER=ollama`, `OLLAMA_URL=http://localhost:11434`, `OLLAMA_MODEL=qwen3.6:35b-a3b` | $0 за вызов (оплачивается только аренда GPU) |
 | Облако, Gemini | `LLM_PROVIDER=gemini`, `GEMINI_API_KEY=…`, `GEMINI_MODEL=gemini-3.1-flash-lite` | считается по токенам каждого вызова и видна в UI (`#stats`) |
 
-Настройка GPU-сервера (NVIDIA L40S, Ollama, faster-whisper) — [docs/GPU_SERVER.md](docs/GPU_SERVER.md).
+Настройка GPU-сервера (NVIDIA L40S, Ollama, faster-whisper) и хостинг приложения на нём (`deploy/brev/`) — [docs/GPU_SERVER.md](docs/GPU_SERVER.md).
 
 ## Сценарий демо (5 минут)
 

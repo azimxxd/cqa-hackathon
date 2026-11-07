@@ -73,3 +73,24 @@ Whisper large-v3 на 5 DEV-звонках (RU, 5–10 мин): 12–26 с на 
 21–46 с при одновременной работе Qwen; язык определён с p ≥ 0.99. Qwen с кэшем на
 4 потока занимает ~24.6 ГБ VRAM из 46; whisper добавляет ещё ~4–5 ГБ — параллельная
 работа помещается с запасом.
+
+## Хостинг приложения на том же сервере
+
+Приложение и публичный адрес работают прямо на Brev рядом с Qwen — без Mac и SSH-туннеля.
+Файлы: [deploy/brev/](../deploy/brev/) — `cqa.service` (Node, `~/cqa-hackathon`, `.env`),
+`cqa-tunnel.service` (Cloudflare quick tunnel на `localhost:3000`), `install.sh`.
+
+`.env` сервера — как локальный, но с `LLM_PROVIDER=ollama`,
+`OLLAMA_URL=http://127.0.0.1:11434`, `OLLAMA_MODEL=qwen3.6:35b-a3b`, `LLM_CONCURRENCY=4`.
+`.env`, `data/cqa.db`, `data/dev.json` и `data/audio/` копируются `scp`, в git их нет.
+
+Обновить код: `ssh loxlka-d05391 'cd ~/cqa-hackathon && git pull --ff-only && sudo systemctl restart cqa'`.
+
+После `brev start` оба сервиса поднимаются сами, но **адрес quick tunnel меняется**. Новый:
+
+```sh
+ssh loxlka-d05391 'journalctl -u cqa-tunnel --no-pager | grep -o "https://[a-z0-9-]*\.trycloudflare\.com" | tail -1'
+```
+
+Первая оценка после старта ждёт загрузки Qwen с диска (до 20–30 мин, см. «Прогрев»).
+Прогреть заранее: `ssh loxlka-d05391 'curl -s localhost:11434/api/generate -d "{\"model\":\"qwen3.6:35b-a3b\",\"keep_alive\":-1}"'`.
