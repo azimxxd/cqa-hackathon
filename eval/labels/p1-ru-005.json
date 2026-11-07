@@ -1,0 +1,43 @@
+[
+  {
+    "criterion_id": "c01",
+    "answer": "yes",
+    "scale_value": null,
+    "note": "c06=4: m012 путаная формулировка «там же где перевод, не в отчете, сверху вниз», клиент переспрашивает m013; c04=15 про комиссию брокера явно не ответил"
+  },
+  {
+    "criterion_id": "c02",
+    "answer": "na",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c03",
+    "answer": "na",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c04",
+    "answer": null,
+    "scale_value": 15
+  },
+  {
+    "criterion_id": "c05",
+    "answer": "yes",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c06",
+    "answer": null,
+    "scale_value": 4
+  },
+  {
+    "criterion_id": "c07",
+    "answer": "yes",
+    "scale_value": null
+  },
+  {
+    "criterion_id": "c08",
+    "answer": "no",
+    "scale_value": null
+  }
+]
