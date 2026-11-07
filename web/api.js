@@ -1,12 +1,13 @@
 import { API_BASE } from "./config.js";
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, details) {
     super(message);
     this.status = status;
+    this.details = details;
   }
 }
-async function request(method, path, body) {
+async function request(method, path, body, asBlob = false) {
   let res;
   try {
     res = await fetch(`${API_BASE}/api${path}`, {
@@ -21,11 +22,13 @@ async function request(method, path, body) {
       0,
     );
   }
+  if (asBlob && res.ok) return res.blob();
   const data = await res.json().catch(() => null);
   if (!res.ok)
     throw new ApiError(
       data?.error || "Не удалось выполнить запрос. Попробуйте ещё раз.",
       res.status,
+      data,
     );
   if (data === null)
     throw new ApiError(
@@ -36,6 +39,8 @@ async function request(method, path, body) {
 }
 const encoded = encodeURIComponent;
 export const api = {
+  submissionPreview: (params) => request("GET", `/submission/preview?${new URLSearchParams(params)}`),
+  submissionDownload: (params) => request("GET", `/submission/download?${new URLSearchParams(params)}`, undefined, true),
   conversations: () => request("GET", "/conversations"),
   conversation: (id) => request("GET", `/conversations/${encoded(id)}`),
   checklists: () => request("GET", "/checklists"),

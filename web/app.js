@@ -1,3 +1,5 @@
+import { submissionPage, submissionEmpty, submissionLoading, submissionError, submissionReport } from "./submission.js";
+import { editChecklist, readChecklist, updateCriterionControls } from "./checklist-editor.js";
 import { api } from "./api.js";
 import { escape as e, icon, button, emptyState, skeleton, time } from "./ui.js";
 import {
@@ -28,13 +30,16 @@ const state = {
   job: null,
   notice: null,
   modal: null,
+  submissionOptions: { dataset: "DEV", group_id: "DEV", source: "final" },
 };
+let submissionRequest = 0, submissionSnapshot;
 let routeToken = 0,
   noticeTimer;
 const nav = [
   ["dialogs", "chats", "Диалоги"],
   ["appeals", "scales", "Апелляции"],
   ["checklist", "list-checks", "Чек-лист"],
+  ["submission", "upload-simple", "Экспорт для жюри"],
   ["stats", "chart-bar", "Статистика"],
 ];
 function render() {
@@ -52,6 +57,7 @@ function render() {
         appeals: appealsPage,
         checklist: checklistPage,
         stats: statsPage,
+        submission: submissionPage,
       }[state.route] ||
       (() =>
         emptyState(
@@ -96,6 +102,7 @@ function routeInfo() {
       id: decodeURIComponent(path.slice(7)),
       version: params.get("version"),
       evaluationId: params.get("evaluation"),
+      turn: Number(params.get("turn")),
     };
   return { page: path };
 }
@@ -107,6 +114,7 @@ async function loadPage(options = {}) {
   } catch {
     route = { page: "missing" };
   }
+  submissionSnapshot = null;
   state.route = route.page;
   state.loading = true;
   state.error = null;
@@ -144,6 +152,10 @@ async function loadPage(options = {}) {
     if (options.focus) {
       window.scrollTo({ top: 0, behavior: "instant" });
       root.querySelector("#page-title")?.focus({ preventScroll: true });
+    }
+    if (route.page === "dialog" && Number.isInteger(route.turn) && route.turn > 0) {
+      const message = state.detail.conversation.messages.find((m) => m.idx === route.turn - 1);
+      if (message) highlightEvidence(message.id);
     }
   } catch (error) {
     if (token !== routeToken) return;
@@ -293,23 +305,8 @@ async function saveChecklist(form) {
   submit.disabled = true;
   errorNode.textContent = "";
   try {
-    const data = new FormData(form),
-      body = structuredClone(state.checklist);
-    body.name = data.get("name").trim();
-    body.first_reaction_threshold_sec = Number(data.get("threshold"));
-    body.criteria = body.criteria.map((c) => ({
-      ...c,
-      title: data.get(`title:${c.id}`).trim(),
-      description: data.get(`description:${c.id}`),
-      weight: Number(data.get(`weight:${c.id}`)),
-      na_allowed: data.has(`na:${c.id}`),
-      na_condition: data.get(`condition:${c.id}`) || null,
-    }));
-    for (const c of body.criteria)
-      if (c.na_allowed && !c.na_condition?.trim())
-        throw Error(
-          `Укажите условие «Не применимо» для критерия «${c.title}».`,
-        );
+    const body = readChecklist(form, state.checklist);
+    form.inert = true;
     const saved = await api.saveChecklist(body);
     state.version = saved.id;
     await loadPage({ refresh: true });
@@ -317,8 +314,94 @@ async function saveChecklist(form) {
   } catch (error) {
     errorNode.textContent = error.message;
     errorNode.scrollIntoView({ block: "center" });
+    form.inert = false;
     submit.disabled = false;
   }
+}
+function submissionOptions(form) {
+  const options = Object.fromEntries(new FormData(form));
+  options.group_id = options.group_id.trim();
+  return options;
+}
+function displaySubmission(region, report, options, error) {
+  region.innerHTML = submissionReport(report, options, error);
+  region.querySelector("#submission-json")?.addEventListener("toggle", (event) => {
+    const details = event.currentTarget;
+    if (details.open) {
+      const pre = details.querySelector("pre");
+      if (!pre.textContent) pre.textContent = JSON.stringify(report.preview, null, 2);
+    }
+  });
+}
+async function previewSubmission(form) {
+  const options = submissionOptions(form);
+  if (!options.group_id) {
+    const input = form.elements.group_id;
+    input.setCustomValidity("Укажите ID группы организаторов.");
+    input.reportValidity();
+    return;
+  }
+  const request = ++submissionRequest;
+  const region = root.querySelector("#submission-result");
+  const submit = form.querySelector('[type="submit"]');
+  state.submissionOptions = options;
+  submissionSnapshot = null;
+  submit.disabled = true;
+  region.innerHTML = submissionLoading();
+  try {
+    const report = await api.submissionPreview(options);
+    if (!region.isConnected || request !== submissionRequest) return;
+    submissionSnapshot = { options, report };
+    displaySubmission(region, report, options);
+  } catch (error) {
+    if (region.isConnected && request === submissionRequest)
+      region.innerHTML = submissionError(error.message);
+  } finally {
+    if (region.isConnected && request === submissionRequest) submit.disabled = false;
+  }
+}
+async function downloadSubmission(button) {
+  const snapshot = submissionSnapshot;
+  if (snapshot?.report.ready !== true) return;
+  const region = root.querySelector("#submission-result");
+  const errorNode = region.querySelector("#submission-download-error");
+  errorNode.textContent = "";
+  button.disabled = true;
+  try {
+    const blob = await api.submissionDownload(snapshot.options);
+    if (!region.isConnected || submissionSnapshot !== snapshot) return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${snapshot.options.dataset.toLowerCase()}-results.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    if (!region.isConnected || submissionSnapshot !== snapshot) return;
+    if (error.status === 409) {
+      const report = { ...snapshot.report, ...error.details, preview: null };
+      submissionSnapshot = null;
+      displaySubmission(region, { ...report, ready: false }, snapshot.options,
+        "Состав набора изменился. Проверьте параметры и обновите предпросмотр.");
+    } else {
+      errorNode.textContent = error.message;
+    }
+  } finally {
+    if (button.isConnected) button.disabled = false;
+  }
+}
+function updateSubmissionForm(target) {
+  const form = target.closest("#submission-form");
+  if (!form) return;
+  const group = form.elements.group_id;
+  group.setCustomValidity("");
+  if (target.name === "dataset" && (!group.value.trim() || group.value.trim() === state.submissionOptions.dataset))
+    group.value = target.value;
+  state.submissionOptions = submissionOptions(form);
+  submissionRequest++;
+  submissionSnapshot = null;
+  form.querySelector('[type="submit"]').disabled = false;
+  root.querySelector("#submission-result").innerHTML = submissionEmpty(true);
 }
 function rememberJob(id) {
   try {
@@ -334,7 +417,8 @@ async function pollJob(id) {
       if (["done", "error"].includes(job.status)) {
         state.job = null;
         rememberJob(null);
-        await loadPage({ refresh: true });
+        if (["checklist", "submission"].includes(state.route)) await summary();
+        else await loadPage({ refresh: true });
         toast(
           job.status === "done"
             ? `Оценка завершена. Обработано диалогов: ${job.done}`
@@ -414,6 +498,10 @@ function highlightEvidence(from, to = from) {
 root.addEventListener("click", (event) => {
   const target = event.target.closest("button,a,tr");
   if (!target || target.disabled) return;
+  if (target.dataset.editor) {
+    editChecklist(target, state.checklist.sections);
+    return;
+  }
   if (target.dataset.open) {
     navigate(target.dataset.open);
     return;
@@ -461,6 +549,9 @@ root.addEventListener("click", (event) => {
       state.search = state.channel = state.status = "";
       render();
       break;
+    case "download-submission":
+      downloadSubmission(target);
+      break;
     case "evaluate-all":
       evaluate();
       break;
@@ -470,6 +561,7 @@ root.addEventListener("click", (event) => {
   }
 });
 root.addEventListener("input", (event) => {
+  if (event.target.name === "group_id") updateSubmissionForm(event.target);
   if (event.target.id === "dialog-search") {
     state.search = event.target.value;
     root.querySelector("#dialog-table").innerHTML = dialogTable(state);
@@ -489,12 +581,14 @@ root.addEventListener("change", async (event) => {
     location.hash = `dialog/${encodeURIComponent(state.detail.conversation.conversation_id)}?version=${encodeURIComponent(target.value)}`;
   if (target.id === "review-action")
     root.querySelector("#review-change").hidden = target.value !== "change";
-  if (target.dataset.na)
-    root.querySelector(
-      `[name="${CSS.escape(`condition:${target.dataset.na}`)}"]`,
-    ).required = target.checked;
+  if (target.tagName === "SELECT") updateSubmissionForm(target);
+  updateCriterionControls(target);
 });
 root.addEventListener("submit", (event) => {
+  if (event.target.id === "submission-form") {
+    event.preventDefault();
+    previewSubmission(event.target);
+  }
   if (event.target.id === "modal-form") {
     event.preventDefault();
     submitModal(event.target);

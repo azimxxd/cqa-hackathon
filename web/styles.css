@@ -1826,3 +1826,74 @@ body:has(> #cqa-root) {
     display: inline;
   }
 }
+
+.cqa .cqa-submission-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 224px), 1fr));
+  gap: 16px;
+  align-items: start;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.cqa .cqa-submission-report {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+.cqa .cqa-submission-table {
+  min-width: 30rem;
+  white-space: normal;
+  table-layout: auto;
+}
+.cqa .cqa-submission-table :is(th, td):nth-child(n) {
+  display: table-cell;
+  width: auto;
+}
+.cqa .cqa-submission-table :is(th, td):last-child {
+  width: 50%;
+}
+.cqa .cqa-submission-table tbody tr {
+  cursor: auto;
+}
+.cqa .cqa-submission-table th[scope="row"] {
+  white-space: normal;
+}
+.cqa .cqa-submission-table td {
+  vertical-align: top;
+}
+.cqa .cqa-submission-report summary {
+  cursor: pointer;
+}
+.cqa .cqa-submission-report pre {
+  max-height: 32rem;
+  overflow: auto;
+  margin: 8px 0 0;
+}
+.cqa .cqa-submission-criteria > div {
+  margin-top: 12px;
+}
+.cqa .cqa-submission-criteria dd {
+  margin: 4px 0 0;
+}
+.cqa .cqa-editor-row,
+.cqa .cqa-scale-editor {
+  min-inline-size: 0;
+}
+.cqa .cqa-editor-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.cqa .cqa-scale-editor {
+  padding: 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+}
+.cqa .cqa-scale-row {
+  align-items: end;
+  margin-bottom: 12px;
+}
+.cqa .cqa-scale-row button {
+  justify-self: start;
+}

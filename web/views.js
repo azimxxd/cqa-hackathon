@@ -1,3 +1,4 @@
+import { criterionEditor } from "./checklist-editor.js";
 import {
   escape as e,
   icon,
@@ -125,7 +126,7 @@ export function detailPage(s) {
             })
             .join(
               "",
-            )}<div class="cqa-evaluation-foot caption-5 cqa-muted"><span>Исходная оценка: ${score(ev.original_total)}</span><span>Расчётная стоимость: ${money(ev.cost_usd)}</span></div>`
+            )}<div class="cqa-evaluation-foot caption-5 cqa-muted"><span>Исходная оценка: ${score(ev.original_total)}${ev.model ? ` · ${e(ev.model)}` : ""}</span><span>${ev.source === "algos" || ev.usage_available === false ? `${ev.source === "algos" ? "Импорт из Algos · " : ""}Токены и стоимость API не измерялись` : `Расчётная стоимость: ${money(ev.cost_usd)}`}</span></div>`
         : emptyState(
             ev?.status === "error"
               ? "Не удалось оценить диалог"
@@ -198,20 +199,18 @@ export function appealsPage(s) {
 }
 export function checklistPage(s) {
   const c = s.checklist;
-  return `${pageHeader("Чек-лист", "Сохранение создаёт новую версию. Прошлые оценки остаются в истории.", `<button class="cqa-button cqa-primary button-sm" type="submit" form="checklist-form" id="save-checklist">${icon("plus")}Сохранить новую версию</button>`)}<div class="cqa-checklist-bar">${versionSelect(s)}<p class="caption-2 cqa-muted">${c.criteria.length} критериев · ${c.sections.length} раздела</p></div><form id="checklist-form"><section class="cqa-panel cqa-checklist-settings"><label class="cqa-field"><span class="title-4">Название</span><input name="name" value="${e(c.name)}" required></label><label class="cqa-field"><span class="title-4">Порог первого ответа, секунд</span><input name="threshold" type="number" min="0" step="1" value="${c.first_reaction_threshold_sec ?? 180}" required></label></section>${c.sections
-    .map(
-      (section) =>
-        `<section class="cqa-editor-section"><h2 class="title-3">${e(section.title)}</h2>${c.criteria
-          .filter((v) => v.section === section.id)
-          .map(
-            (v) =>
-              `<fieldset class="cqa-panel cqa-editor-row"><legend class="cqa-sr-only">${e(v.title)}</legend><div class="cqa-editor-number caption-3">${e(v.id)}</div><div class="cqa-editor-main"><label class="cqa-field"><span class="caption-2 cqa-muted">Критерий</span><input class="title-4" name="title:${e(v.id)}" value="${e(v.title)}" required></label><label class="cqa-field"><span class="caption-2 cqa-muted">Условия оценки</span><textarea name="description:${e(v.id)}" rows="3" required>${e(v.description)}</textarea></label><div class="cqa-editor-options"><label class="cqa-field cqa-weight-field"><span class="caption-2 cqa-muted">Вес</span><input type="number" name="weight:${e(v.id)}" min="0" step="any" value="${v.weight}" required></label><label class="cqa-checkbox body-6"><input type="checkbox" name="na:${e(v.id)}" ${v.na_allowed ? "checked" : ""} data-na="${e(v.id)}">Разрешить «Не применимо»</label></div><label class="cqa-field"><span class="caption-2 cqa-muted">Когда критерий не применяется</span><input name="condition:${e(v.id)}" value="${e(v.na_condition || "")}" ${v.na_allowed ? "required" : ""}></label>${v.type === "scale" ? `<div class="cqa-scale-preview caption-5 cqa-muted">Шкала: ${v.scale.map((p) => p.value).join(" · ")}</div>` : ""}</div><span class="cqa-badge cqa-status-empty caption-5">${v.gross_error ? "Грубая ошибка" : v.type === "scale" ? "Шкала" : "Да / Нет"}</span></fieldset>`,
-          )
-          .join("")}</section>`,
-    )
-    .join(
-      "",
-    )}<p id="checklist-error" class="cqa-form-error body-6" role="alert"></p></form>`;
+  return `${pageHeader("Чек-лист", "Сохранение создаёт новую версию. Оценка диалогов запускается отдельно.", `<button class="cqa-button cqa-primary button-sm" type="submit" form="checklist-form" id="save-checklist">${icon("plus")}Сохранить новую версию</button>`)}
+    <div class="cqa-checklist-bar">${versionSelect(s)}</div>
+    <p class="cqa-inline-warning body-6">${icon("warning-circle")}Изменение официальных критериев может сделать версию несовместимой с форматом Results JSON 1.0.</p>
+    <form id="checklist-form">
+      <section class="cqa-panel cqa-checklist-settings">
+        <label class="cqa-field"><span class="title-4">Название</span><input name="name" value="${e(c.name)}" required></label>
+        <label class="cqa-field"><span class="title-4">Порог первого ответа, секунд</span><input name="threshold" type="number" min="0" step="any" value="${e(c.first_reaction_threshold_sec ?? 180)}" required></label>
+      </section>
+      <div data-criteria>${c.criteria.map((v) => criterionEditor(v, c.sections)).join("")}</div>
+      <button class="cqa-button cqa-secondary button-sm" type="button" data-editor="add-criterion" ${c.sections.length ? "" : "disabled"}>${icon("plus")}Добавить критерий</button>
+      <p id="checklist-error" class="cqa-form-error body-6" role="alert"></p>
+    </form>`;
 }
 export function statsPage(s) {
   const stats = s.stats,
@@ -227,11 +226,11 @@ export function statsPage(s) {
     label,
     count: done.filter((c) => c.total >= min && c.total < max).length,
   }));
-  return `${pageHeader("Статистика", "Результаты последних оценок и затраты на обработку.", button("Обновить", "refresh", "arrow-clockwise"))}<section class="cqa-summary">${metric("Успешных оценок", number(stats.evaluations_done), "Включая предыдущие версии")}${metric("Оценок с вызовами", number(stats.evaluations_with_calls), "Без полностью кешированных")}${metric("Вызовов модели", number(stats.calls), "Все попытки обработки")}${metric("Расчётная стоимость", money(stats.cost_usd), "За все вызовы", "cqa-metric-accent")}</section><div class="cqa-stats-layout"><section class="cqa-panel cqa-distribution"><h2 class="title-2">Распределение оценок</h2><p class="caption-2 cqa-muted">Последняя оценка каждого диалога</p>${done.length ? `<div class="cqa-bars">${bins.map((b) => `<div class="cqa-bar-row"><span class="caption-2">${b.label}</span><div class="cqa-bar-track"><div style="width:${(b.count / done.length) * 100}%"></div></div><strong class="caption-3">${b.count}</strong></div>`).join("")}</div><p class="caption-5 cqa-muted">${done.length} ${done.length === 1 ? "диалог" : "диалогов"} с числовой оценкой</p>` : emptyState("Пока нет оценок", "После первого прогона здесь появится распределение результатов.")}</section><section class="cqa-panel cqa-cost-details"><h2 class="title-2">Стоимость и обработка</h2><dl>${[
-    ["Полная оценка, в среднем", money(stats.avg_cost_per_full_eval)],
-    ["Оценка с вызовами, в среднем", money(stats.avg_cost_per_eval)],
-    ["Использовано токенов", number(stats.tokens)],
-    ["Время одного вызова", `${number(stats.avg_latency_ms / 1000, 2)} с`],
+  return `${pageHeader("Статистика", "Результаты последних оценок и затраты на обработку.", button("Обновить", "refresh", "arrow-clockwise"))}<section class="cqa-summary">${metric("Успешных оценок", number(stats.evaluations_done), "Включая предыдущие версии")}${metric("Оценок с вызовами", number(stats.evaluations_with_calls), "Без полностью кешированных")}${metric("Вызовов модели", number(stats.calls), "Все попытки обработки")}${metric("Расчётная стоимость", stats.calls ? money(stats.cost_usd) : "—", "По учтённым вызовам", "cqa-metric-accent")}</section><div class="cqa-stats-layout"><section class="cqa-panel cqa-distribution"><h2 class="title-2">Распределение оценок</h2><p class="caption-2 cqa-muted">Последняя оценка каждого диалога</p>${done.length ? `<div class="cqa-bars">${bins.map((b) => `<div class="cqa-bar-row"><span class="caption-2">${b.label}</span><div class="cqa-bar-track"><div style="width:${(b.count / done.length) * 100}%"></div></div><strong class="caption-3">${b.count}</strong></div>`).join("")}</div><p class="caption-5 cqa-muted">${done.length} ${done.length === 1 ? "диалог" : "диалогов"} с числовой оценкой</p>` : emptyState("Пока нет оценок", "После первого прогона здесь появится распределение результатов.")}</section><section class="cqa-panel cqa-cost-details"><h2 class="title-2">Стоимость и обработка</h2><dl>${[
+    ["Полная оценка, в среднем", stats.calls ? money(stats.avg_cost_per_full_eval) : "—"],
+    ["Оценка с вызовами, в среднем", stats.calls ? money(stats.avg_cost_per_eval) : "—"],
+    ["Использовано токенов", stats.calls ? number(stats.tokens) : "—"],
+    ["Время одного вызова", stats.calls ? `${number(stats.avg_latency_ms / 1000, 2)} с` : "—"],
   ]
     .map(
       ([label, value]) =>
@@ -239,5 +238,5 @@ export function statsPage(s) {
     )
     .join(
       "",
-    )}</dl><p class="caption-5 cqa-muted">Стоимость включает неудачные попытки. Полностью кешированные оценки не входят в среднюю стоимость вызовов.</p></section></div>`;
+    )}</dl><p class="caption-5 cqa-muted">Для импортированных оценок Algos токены и стоимость API не измерялись. Статистика вызовов включает неудачные попытки. Полностью кешированные оценки не входят в среднюю стоимость вызовов.</p></section></div>`;
 }
