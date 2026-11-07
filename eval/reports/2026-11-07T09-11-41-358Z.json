@@ -1,0 +1,70 @@
+{
+  "at": "2026-11-07T09:11:41.358Z",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_version": "v4",
+  "conversations": 1,
+  "errors": 0,
+  "per_criterion": {
+    "c01": {
+      "accuracy": 1,
+      "n": 1
+    },
+    "c02": {
+      "accuracy": 1,
+      "n": 1
+    },
+    "c03": {
+      "accuracy": 1,
+      "n": 1
+    },
+    "c04": {
+      "accuracy": 1,
+      "n": 1
+    },
+    "c05": {
+      "accuracy": 1,
+      "n": 1
+    },
+    "c06": {
+      "accuracy": 1,
+      "n": 1
+    },
+    "c07": {
+      "accuracy": 1,
+      "n": 1
+    },
+    "c08": {
+      "accuracy": 1,
+      "n": 1
+    }
+  },
+  "overall_criterion_accuracy": 1,
+  "total_mae": 0,
+  "gross_error_accuracy": 1,
+  "cost": {
+    "calls": 1,
+    "input_tokens": 4805,
+    "output_tokens": 1017,
+    "cost_usd": 0.004,
+    "avg_cost_per_eval_usd": 0.00398,
+    "avg_latency_ms": 3564,
+    "note": "only uncached conversations are counted"
+  },
+  "totals": [
+    {
+      "id": "p1-ru-025",
+      "total_pred": 100,
+      "total_gt": 100
+    }
+  ],
+  "misses": {
+    "c01": [],
+    "c02": [],
+    "c03": [],
+    "c04": [],
+    "c05": [],
+    "c06": [],
+    "c07": [],
+    "c08": []
+  }
+}

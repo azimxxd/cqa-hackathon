@@ -3,11 +3,11 @@
     "criterion_id": "c01",
     "answer": "yes",
     "scale_value": null,
-    "note": "c03=no: раскрыл ограничение на вывод без идентификации (m010, m012); c04=5 причину не назвал"
+    "note": "c03=no: раскрыл ограничение на вывод без идентификации (m010, m012); c04=5 и c06=4 причину не назвал и отмахнулся"
   },
   {
     "criterion_id": "c02",
-    "answer": "no",
+    "answer": "na",
     "scale_value": null
   },
   {
@@ -28,7 +28,7 @@
   {
     "criterion_id": "c06",
     "answer": null,
-    "scale_value": 7
+    "scale_value": 4
   },
   {
     "criterion_id": "c07",

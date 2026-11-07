@@ -1,0 +1,154 @@
+{
+  "at": "2026-11-07T09:23:30.232Z",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_version": "v6",
+  "conversations": 15,
+  "errors": 0,
+  "per_criterion": {
+    "c01": {
+      "accuracy": 1,
+      "n": 15
+    },
+    "c02": {
+      "accuracy": 1,
+      "n": 15
+    },
+    "c03": {
+      "accuracy": 1,
+      "n": 15
+    },
+    "c04": {
+      "accuracy": 0.933,
+      "n": 15
+    },
+    "c05": {
+      "accuracy": 1,
+      "n": 15
+    },
+    "c06": {
+      "accuracy": 0.933,
+      "n": 15
+    },
+    "c07": {
+      "accuracy": 1,
+      "n": 15
+    },
+    "c08": {
+      "accuracy": 1,
+      "n": 15
+    }
+  },
+  "overall_criterion_accuracy": 0.983,
+  "total_mae": 0.83,
+  "gross_error_accuracy": 1,
+  "cost": {
+    "calls": 15,
+    "input_tokens": 74513,
+    "output_tokens": 17586,
+    "cost_usd": 0.0663,
+    "avg_cost_per_eval_usd": 0.00442,
+    "avg_latency_ms": 5942,
+    "note": "only uncached conversations are counted"
+  },
+  "totals": [
+    {
+      "id": "p1-en-013",
+      "total_pred": 62.31,
+      "total_gt": 62.31
+    },
+    {
+      "id": "p1-en-014",
+      "total_pred": 30.59,
+      "total_gt": 30.59
+    },
+    {
+      "id": "p1-kz-001",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-005",
+      "total_pred": 78.46,
+      "total_gt": 78.46
+    },
+    {
+      "id": "p1-kz-006",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-009",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-001",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-004",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-005",
+      "total_pred": 86.15,
+      "total_gt": 78.46
+    },
+    {
+      "id": "p1-ru-016",
+      "total_pred": 70,
+      "total_gt": 70
+    },
+    {
+      "id": "p1-ru-018",
+      "total_pred": 16,
+      "total_gt": 16
+    },
+    {
+      "id": "p1-ru-023",
+      "total_pred": 70,
+      "total_gt": 70
+    },
+    {
+      "id": "p1-ru-027",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-029",
+      "total_pred": 70,
+      "total_gt": 70
+    },
+    {
+      "id": "p4-ru-004",
+      "total_pred": 100,
+      "total_gt": 95.26
+    }
+  ],
+  "misses": {
+    "c01": [],
+    "c02": [],
+    "c03": [],
+    "c04": [
+      {
+        "id": "p1-ru-005",
+        "expected": 15,
+        "got": 20,
+        "explanation": "Все существенные вопросы клиента (о комиссиях и поиске реквизитов) в итоге были полностью и корректно решены."
+      }
+    ],
+    "c05": [],
+    "c06": [
+      {
+        "id": "p4-ru-004",
+        "expected": 7,
+        "got": 10,
+        "explanation": "Оператор последовательно и понятно проконсультировал клиента по всем вопросам (m090, m094, m112)."
+      }
+    ],
+    "c07": [],
+    "c08": []
+  }
+}

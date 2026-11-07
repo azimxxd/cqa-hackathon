@@ -1,0 +1,503 @@
+{
+  "at": "2026-11-07T09:08:09.842Z",
+  "model": "gemini-3.5-flash-lite",
+  "prompt_version": "v3",
+  "conversations": 65,
+  "errors": 0,
+  "per_criterion": {
+    "c01": {
+      "accuracy": 1,
+      "n": 65
+    },
+    "c02": {
+      "accuracy": 0.923,
+      "n": 65
+    },
+    "c03": {
+      "accuracy": 1,
+      "n": 65
+    },
+    "c04": {
+      "accuracy": 0.954,
+      "n": 65
+    },
+    "c05": {
+      "accuracy": 0.985,
+      "n": 65
+    },
+    "c06": {
+      "accuracy": 0.923,
+      "n": 65
+    },
+    "c07": {
+      "accuracy": 0.938,
+      "n": 65
+    },
+    "c08": {
+      "accuracy": 1,
+      "n": 65
+    }
+  },
+  "overall_criterion_accuracy": 0.965,
+  "total_mae": 1.42,
+  "gross_error_accuracy": 1,
+  "cost": {
+    "calls": 66,
+    "input_tokens": 325604,
+    "output_tokens": 76305,
+    "cost_usd": 0.2884,
+    "avg_cost_per_eval_usd": 0.00444,
+    "avg_latency_ms": 5858,
+    "note": "only uncached conversations are counted"
+  },
+  "totals": [
+    {
+      "id": "p1-en-001",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-002",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-003",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-004",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-005",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-006",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-007",
+      "total_pred": 77.69,
+      "total_gt": 77.69
+    },
+    {
+      "id": "p1-en-008",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-009",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-010",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-011",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-012",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-en-013",
+      "total_pred": 62.31,
+      "total_gt": 62.31
+    },
+    {
+      "id": "p1-en-014",
+      "total_pred": 30,
+      "total_gt": 35.88
+    },
+    {
+      "id": "p1-en-015",
+      "total_pred": 51.25,
+      "total_gt": 57.5
+    },
+    {
+      "id": "p1-kz-001",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-002",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-003",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-004",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-005",
+      "total_pred": 78.46,
+      "total_gt": 78.46
+    },
+    {
+      "id": "p1-kz-006",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-007",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-008",
+      "total_pred": 56.88,
+      "total_gt": 56.88
+    },
+    {
+      "id": "p1-kz-009",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-010",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-011",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-012",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-013",
+      "total_pred": 54.62,
+      "total_gt": 62.31
+    },
+    {
+      "id": "p1-kz-014",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-kz-015",
+      "total_pred": 30.59,
+      "total_gt": 35.88
+    },
+    {
+      "id": "p1-ru-001",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-002",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-003",
+      "total_pred": 87.5,
+      "total_gt": 81.88
+    },
+    {
+      "id": "p1-ru-004",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-005",
+      "total_pred": 86.15,
+      "total_gt": 78.46
+    },
+    {
+      "id": "p1-ru-006",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-007",
+      "total_pred": 70,
+      "total_gt": 77.69
+    },
+    {
+      "id": "p1-ru-008",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-009",
+      "total_pred": 41,
+      "total_gt": 35.88
+    },
+    {
+      "id": "p1-ru-010",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-011",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-012",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-013",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-014",
+      "total_pred": 63.13,
+      "total_gt": 63.13
+    },
+    {
+      "id": "p1-ru-015",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-016",
+      "total_pred": 70,
+      "total_gt": 51.25
+    },
+    {
+      "id": "p1-ru-017",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-018",
+      "total_pred": 16,
+      "total_gt": 16
+    },
+    {
+      "id": "p1-ru-019",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-020",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-021",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-022",
+      "total_pred": 12.5,
+      "total_gt": 24.62
+    },
+    {
+      "id": "p1-ru-023",
+      "total_pred": 70,
+      "total_gt": 70
+    },
+    {
+      "id": "p1-ru-024",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-025",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-026",
+      "total_pred": 20,
+      "total_gt": 20
+    },
+    {
+      "id": "p1-ru-027",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-028",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p1-ru-029",
+      "total_pred": 75.63,
+      "total_gt": 70
+    },
+    {
+      "id": "p1-ru-030",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p4-ru-001",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p4-ru-002",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p4-ru-003",
+      "total_pred": 100,
+      "total_gt": 100
+    },
+    {
+      "id": "p4-ru-004",
+      "total_pred": 95.26,
+      "total_gt": 100
+    },
+    {
+      "id": "p4-ru-005",
+      "total_pred": 100,
+      "total_gt": 100
+    }
+  ],
+  "misses": {
+    "c01": [],
+    "c02": [
+      {
+        "id": "p1-ru-009",
+        "expected": "na",
+        "got": "yes",
+        "explanation": "Оператор уточнил подробности проблемы в реплике m010 перед тем, как давать ответ."
+      },
+      {
+        "id": "p1-ru-022",
+        "expected": "na",
+        "got": "no",
+        "explanation": "Оператор проигнорировал запрос о выборе облигаций и не уточнил детали, сразу предложив перевести деньги на карту в реплике m010."
+      },
+      {
+        "id": "p1-ru-029",
+        "expected": "na",
+        "got": "yes",
+        "explanation": "Оператор уточнил, куда именно клиенту нужно зайти перед тем, как дать точную ссылку."
+      },
+      {
+        "id": "p4-ru-002",
+        "expected": "na",
+        "got": "yes",
+        "explanation": "Оператор уточнил детали приказа и сверил информацию по бумаге с трейдерами (m012, m064)."
+      },
+      {
+        "id": "p4-ru-003",
+        "expected": "na",
+        "got": "yes",
+        "explanation": "Оператор уточнил детали поручения и перешел к проверке информации с клиентом (m019, m039)."
+      }
+    ],
+    "c03": [],
+    "c04": [
+      {
+        "id": "p1-kz-012",
+        "expected": 20,
+        "got": "na",
+        "explanation": "Чат завершился до того, как был задан полноценный вопрос, так как клиент отложил обращение."
+      },
+      {
+        "id": "p1-kz-013",
+        "expected": 20,
+        "got": 15,
+        "explanation": "Основной вопрос по поиску облигаций был успешно решён оператором (m010, m011), однако была допущена второстепенная деталь в виде непрофессионального поведения."
+      },
+      {
+        "id": "p1-ru-005",
+        "expected": 15,
+        "got": 20,
+        "explanation": "Все вопросы клиента были успешно закрыты."
+      }
+    ],
+    "c05": [
+      {
+        "id": "p1-ru-016",
+        "expected": "no",
+        "got": "yes",
+        "explanation": "Оператор вел диалог в вежливой форме, грубых нарушений клиентоориентированности нет."
+      }
+    ],
+    "c06": [
+      {
+        "id": "p1-kz-015",
+        "expected": 7,
+        "got": 4,
+        "explanation": "Диалог завершился отпиской и уходом от ответа, что снижает качество ведения диалога (m014)."
+      },
+      {
+        "id": "p1-ru-003",
+        "expected": 7,
+        "got": 10,
+        "explanation": "Ответы оператора ясные и связные, первая реакция в рамках норматива (m011)."
+      },
+      {
+        "id": "p1-ru-009",
+        "expected": 7,
+        "got": 4,
+        "explanation": "Оператор оборвал диалог отпиской и преждевременным прощанием, не решив вопрос клиента (m016)."
+      },
+      {
+        "id": "p1-ru-022",
+        "expected": 4,
+        "got": 0,
+        "explanation": "Оператор давал неадекватные предложения обхода компании вместо консультации, из-за чего диалог потерял смысл (m010, m012)."
+      },
+      {
+        "id": "p4-ru-004",
+        "expected": 10,
+        "got": 7,
+        "explanation": "Был один заметный сбой с повторением почты трейдеров, из-за чего клиенту пришлось переспрашивать (m104, m107)."
+      }
+    ],
+    "c07": [
+      {
+        "id": "p1-en-014",
+        "expected": "yes",
+        "got": "no",
+        "explanation": "Оператор написал только 'Goodbye' без подведения итогов и предложения помощи, оставив вопрос клиента открытым (m015)."
+      },
+      {
+        "id": "p1-en-015",
+        "expected": "yes",
+        "got": "no",
+        "explanation": "Оператор завершил диалог только одним словом без предложения дальнейшей помощи."
+      },
+      {
+        "id": "p1-ru-007",
+        "expected": "yes",
+        "got": "no",
+        "explanation": "Оператор завершил диалог пожеланием хорошего дня, но не предложил дальнейшую помощь и не ответил на все вопросы клиента (m013)."
+      },
+      {
+        "id": "p4-ru-003",
+        "expected": "na",
+        "got": "yes",
+        "explanation": "Оператор согласовал время обратной связи с клиентом, зафиксировав итог общения."
+      }
+    ],
+    "c08": []
+  }
+}
