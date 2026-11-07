@@ -16,6 +16,7 @@ import { buildPrompt, responseSchema, PROMPT_VERSION } from "./prompt.js";
 import { normalize, validateResult, quoteFlags } from "./validate.js";
 import { FEW_SHOT } from "./fewshot.js";
 import { parseTimestampSec, offsetOf } from "./timing.js";
+import { activeProvider, ollamaModel } from "./router.js";
 
 export { PROMPT_VERSION };
 
@@ -26,8 +27,8 @@ async function getProvider(model) {
 }
 
 export function modelName() {
-  return (process.env.LLM_PROVIDER || "gemini").toLowerCase() === "ollama"
-    ? `ollama/${process.env.OLLAMA_MODEL || "qwen2.5:14b"}`
+  return activeProvider() === "ollama"
+    ? `ollama/${ollamaModel()}`
     : process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
 }
 

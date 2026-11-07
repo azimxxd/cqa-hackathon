@@ -1,4 +1,5 @@
 import { requestJson } from "./request.js";
+import { ollamaUrl, ollamaHeaders } from "../router.js";
 // Owner: Алдияр. Local provider via Ollama for the local-LLM variant.
 // /api/chat with structured output (format = JSON schema), temperature 0.
 
@@ -27,10 +28,7 @@ export async function generate({
   seed = 7,
   config,
 }) {
-  const url = (process.env.OLLAMA_URL || "http://localhost:11434").replace(
-    /\/$/,
-    "",
-  );
+  const url = ollamaUrl();
   const { json, calls } = await requestJson({
     provider: "ollama",
     url: `${url}/api/chat`,
@@ -44,7 +42,7 @@ export async function generate({
     }),
     init: {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", ...ollamaHeaders() },
       body: JSON.stringify({
         model,
         stream: false,

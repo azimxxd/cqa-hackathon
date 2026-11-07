@@ -6,6 +6,7 @@ import {
   modelName,
 } from "../ai/evaluate.js";
 import { alignTranscription } from "../ai/transcription.js";
+import { autoMode } from "../ai/router.js";
 import { getChecklist, now, transaction } from "./db.js";
 import { getConversation } from "./import.js";
 import { createEvaluation, getEvaluation } from "./evaluations.js";
@@ -47,7 +48,9 @@ export function createJobService(db, options = {}) {
   const config = evaluationConfig(options.config);
   const configId = configHash(config);
   const fake = options.fake ?? process.env.CQA_FAKE_LLM === "1";
-  const model = options.model ?? (fake ? "fake" : modelName());
+  // Pinned unless LLM_PROVIDER=auto, where each job takes the provider that is online at submit time.
+  const pinned = options.model ?? (fake ? "fake" : autoMode() ? null : modelName());
+  const currentModel = () => pinned ?? modelName();
   const promptVersion =
     options.promptVersion ?? (fake ? "fake" : PROMPT_VERSION);
   const promptKey = (checklist) =>
@@ -90,7 +93,7 @@ export function createJobService(db, options = {}) {
         "INSERT INTO jobs VALUES (?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data",
       )
       .run(job.id, JSON.stringify(job));
-  const logCalls = (id, calls = []) => {
+  const logCalls = (id, calls = [], model = currentModel()) => {
     for (const call of calls) {
       for (const key of [
         "input_tokens",
@@ -120,13 +123,14 @@ export function createJobService(db, options = {}) {
     }
   };
   async function processItem(item) {
+    const model = item.model;
     const evaluation = db
       .prepare("SELECT * FROM evaluations WHERE id=?")
       .get(item.evaluation_id);
     if (evaluation.status === "done") return; // COMMIT may have preceded the last job persist.
     const data = JSON.parse(evaluation.data);
     if (
-      item.model !== model || item.config_id !== configId ||
+      (pinned !== null && item.model !== pinned) || item.config_id !== configId ||
       item.prompt_key !==
         promptKey(getChecklist(db, evaluation.checklist_version_id))
     )
@@ -191,7 +195,7 @@ export function createJobService(db, options = {}) {
             },
             { noCache: true, config },
           );
-          logCalls(evaluation.id, response?.calls);
+          logCalls(evaluation.id, response?.calls, model);
           if (!Array.isArray(response?.results))
             throw Object.assign(Error("AI results must be an array"), {
               invalidResult: true,
@@ -216,7 +220,7 @@ export function createJobService(db, options = {}) {
           }
           break;
         } catch (error) {
-          if (error.calls) logCalls(evaluation.id, error.calls);
+          if (error.calls) logCalls(evaluation.id, error.calls, model);
           if (
             error.retryable !== true ||
             error.invalidResult ||
@@ -313,6 +317,7 @@ export function createJobService(db, options = {}) {
       errors: [],
       items: [],
     };
+    const model = currentModel();
     transaction(db, () => {
       job.items = items.map(({ id, transcript_items, ...provenance }) => {
         const data = { prompt_key: promptKey(checklist), config_id: configId, evaluation_config: config, ...provenance };

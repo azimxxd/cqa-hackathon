@@ -9,6 +9,7 @@ import { createJobService } from "./jobs.js";
 import { jobRoutes } from "./routes/jobs.js";
 import { submissionRoutes } from "./routes/submission.js";
 import { transcriptionRoutes } from "./routes/transcription.js";
+import { aiRoutes } from "./routes/ai.js";
 export function createApp(db, options = {}) {
   const transcription = transcriptionRoutes(db, options.transcription);
   const jobs = createJobService(db, {
@@ -21,7 +22,7 @@ export function createApp(db, options = {}) {
   app.get("/api/health", (_req, res) => res.json({ ok: true }));
   app.locals.jobs = jobs;
   app.locals.transcription = transcription;
-  app.use("/api", jobRoutes(jobs), appealRoutes(db), statsRoutes(db));
+  app.use("/api", jobRoutes(jobs), appealRoutes(db), statsRoutes(db), aiRoutes());
   app.use(
     "/api",
     transcription.router,

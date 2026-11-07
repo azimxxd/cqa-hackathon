@@ -32,6 +32,7 @@ npm start                 # http://localhost:3000
 |---|---|---|
 | Локально, Qwen на своём GPU | `LLM_PROVIDER=ollama`, `OLLAMA_URL=http://localhost:11434`, `OLLAMA_MODEL=qwen3.6:35b-a3b` | $0 за вызов (оплачивается только аренда GPU) |
 | Облако, Gemini | `LLM_PROVIDER=gemini`, `GEMINI_API_KEY=…`, `GEMINI_MODEL=gemini-3.1-flash-lite` | считается по токенам каждого вызова и видна в UI (`#stats`) |
+| Автоматически | `LLM_PROVIDER=auto` + переменные обоих режимов | Qwen, пока GPU-сервер включён, иначе Gemini |
 
 Настройка GPU-сервера (NVIDIA L40S, Ollama, faster-whisper) и хостинг приложения на нём (`deploy/brev/`) — [docs/GPU_SERVER.md](docs/GPU_SERVER.md).
 
@@ -126,7 +127,9 @@ npm run eval -- --limit 20        # точность против разметк
 | `PORT` | `3000` |
 | `CQA_DB_PATH` | `data/cqa.db` |
 | `ORG_API_URL` | URL API организаторов, GET с `group_id` |
-| `LLM_PROVIDER` | `gemini` (по умолчанию) или `ollama` |
+| `LLM_PROVIDER` | `gemini` (по умолчанию), `ollama` или `auto`: Qwen через Ollama, пока сервер отвечает и модель на месте (проверка каждые 20 с), иначе Gemini; модель фиксируется для каждого задания и пишется в оценку |
+| `OLLAMA_API_KEY` | Необязательный Bearer-токен для Ollama за прокси с авторизацией |
+| `OLLAMA_REGISTER_TOKEN` / `OLLAMA_ENDPOINT_FILE` | Для `auto`: GPU-сервер может сообщить свой новый адрес через `POST /api/ai/ollama-endpoint` с этим токеном; адрес сохраняется в файл |
 | `GEMINI_API_KEY` | Ключ Gemini, передаётся только заголовком |
 | `GEMINI_API_KEYS` | Необязательный пул ключей через запятую, точку с запятой или пробел; имеет приоритет над `GEMINI_API_KEY` |
 | `GEMINI_MODEL` | `gemini-3.1-flash-lite` |

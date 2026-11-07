@@ -59,7 +59,7 @@ const isWorkspace = () => ["dialogs", "dialog"].includes(state.route);
 function studioHeader(active, count) {
   const ai = state.ai;
   const modelStatus = ai
-    ? [ai.provider, ai.model, ai.configured ? "настроено" : "не настроено"].filter(Boolean).join(" · ")
+    ? [ai.mode === "auto" ? `авто: ${ai.provider === "ollama" ? "Qwen на GPU" : "Gemini (GPU выключен)"}` : ai.provider, ai.model, ai.configured ? "настроено" : "не настроено"].filter(Boolean).join(" · ")
     : state.aiError ? `Статус модели недоступен: ${state.aiError}` : "Проверяем статус модели";
   return `<header class="cqa-studio-header">
     <a class="cqa-brand" href="#dialogs" aria-label="CQA, к диалогам"><span class="cqa-brand-mark"><i></i><i></i><i></i></span><span class="cqa-brand-word heading-5">cqa<span>.</span></span></a>

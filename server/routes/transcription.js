@@ -8,6 +8,7 @@ import {
 } from "../../ai/transcription.js";
 import { getKeys } from "../../ai/providers/gemini.js";
 import { modelName } from "../../ai/evaluate.js";
+import { activeProvider, autoMode, routerState } from "../../ai/router.js";
 import { byteRange, createAudioStore, hash } from "../audio.js";
 import { asyncRoute, fail } from "../http.js";
 import { getConversation } from "../import.js";
@@ -75,7 +76,7 @@ export function transcriptionRoutes(db, options = {}) {
   }
 
   router.get("/ai/status", (_req, res) => {
-    const ollama = process.env.LLM_PROVIDER?.toLowerCase() === "ollama";
+    const ollama = activeProvider() === "ollama";
     let configured = ollama;
     if (!ollama) {
       try {
@@ -86,6 +87,7 @@ export function transcriptionRoutes(db, options = {}) {
     }
     res.json({
       provider: ollama ? "ollama" : "gemini",
+      ...(autoMode() ? { mode: "auto", ollama: routerState() } : {}),
       model: modelName(),
       configured,
       transcription_model: transcriptionModel(),
