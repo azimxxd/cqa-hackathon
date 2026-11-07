@@ -70,7 +70,8 @@ export function validateResult(r, criterion, conversation) {
     bad(
       `несуществующие или неверные evidence_ids ${JSON.stringify(r.evidence_ids)}`,
     );
-  if (r.checked_range) {
+  if (r.checked_range != null && (typeof r.checked_range !== "object" || Array.isArray(r.checked_range))) bad("checked_range должен быть объектом или null");
+  else if (r.checked_range) {
     const { from, to } = r.checked_range;
     if (!ids.has(from) || !ids.has(to)) bad("несуществующий checked_range");
     else if (
