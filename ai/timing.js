@@ -3,7 +3,9 @@
 // Tags and attachments are ignored (official rule for c06).
 
 const ATTACHMENT_RE = /^\s*(\[[^\]]*\]|<[^>]*>|#\S+(\s+#\S+)*)\s*$/u;
-const WAIT_RE = /(ожида|подожд|минут|секунд|момент|уточн|провер|күт|минут|сәт|тексер|нақтыла|wait|moment|minute|second|check|hold)/iu;
+const WAIT_RE = /(подождите|ожидайте|прошу\s+ожидать|одну\s+минуту|минуту[,]?\s+пожалуйста|сейчас\s+(проверю|уточню|посмотрю)|күте\s+тұрыңыз|бір\s+(минут|сәт)|one\s+moment|please\s+(hold|wait)|let\s+me\s+check)/iu;
+const HANDOFF_RE = /(перевед[её]н.*оператор|перевод.*оператор|эскалаци|передан.*оператор|transfer.*(agent|operator)|escalat|операторға.*(ауыстыр|беріл))/iu;
+export const LONG_PAUSE_THRESHOLD_SEC = 60;
 
 /** Seconds from start for a message; uses offset_sec when present, else parses timestamp. */
 export function offsetOf(msg, t0) {
@@ -19,7 +21,7 @@ export function offsetOf(msg, t0) {
 }
 
 function isContent(msg) {
-  return msg.text && !ATTACHMENT_RE.test(msg.text);
+  return msg.text && !ATTACHMENT_RE.test(msg.text) && !/^\s*(тег|tag|вложение|attachment)\s*:/iu.test(msg.text);
 }
 
 function fmt(sec) {
@@ -53,10 +55,10 @@ export function computeTiming(conversation, thresholdSec = 180) {
   // otherwise the last client message before it.
   let from = null;
   for (let i = firstOpIdx - 1; i >= 0; i--) {
-    if (items[i].speaker === 'system') { from = items[i]; break; }
+    if (items[i].speaker === 'system' && isContent(items[i]) && HANDOFF_RE.test(items[i].text)) { from = items[i]; break; }
   }
   if (!from) {
-    for (let i = firstOpIdx - 1; i >= 0; i--) if (items[i].speaker === 'client') { from = items[i]; break; }
+    for (let i = firstOpIdx - 1; i >= 0; i--) if (items[i].speaker === 'client' && isContent(items[i])) { from = items[i]; break; }
   }
   if (from && from.t != null && firstOp.t != null) {
     facts.first_reaction_sec = Math.max(0, firstOp.t - from.t);
@@ -81,7 +83,7 @@ export function computeTiming(conversation, thresholdSec = 180) {
     const prev = items[j];
     if (!prev || prev.t == null) continue;
     const gap = m.t - prev.t;
-    if (gap <= 60) continue;
+    if (gap <= LONG_PAUSE_THRESHOLD_SEC) continue;
     let k = j;
     while (k >= firstOpIdx && items[k].speaker !== 'operator') k--;
     const warned = k >= firstOpIdx && WAIT_RE.test(items[k].text || '');
@@ -89,7 +91,7 @@ export function computeTiming(conversation, thresholdSec = 180) {
     lines.push(`Пауза оператора ${fmt(gap)} между ${prev.id} и ${m.id}` +
       (warned ? ` (перед паузой в ${items[k].id} есть предупреждение об ожидании).` : ' (предупреждения об ожидании не найдено).'));
   }
-  if (!facts.long_pauses.length) lines.push('Заметных пауз оператора (> 60 с) после первого ответа нет.');
+  if (!facts.long_pauses.length) lines.push(`Заметных пауз оператора (> ${LONG_PAUSE_THRESHOLD_SEC} с) после первого ответа нет.`);
   facts.text = lines.join('\n');
   return facts;
 }

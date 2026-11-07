@@ -2,7 +2,7 @@
 // transcript with message ids, timing facts from timing.js, dialogue text treated as data.
 import { computeTiming, offsetOf } from './timing.js';
 
-export const PROMPT_VERSION = 'v1';
+export const PROMPT_VERSION = 'v2';
 
 const SYSTEM = `Ты — эксперт службы контроля качества (QA) брокерской компании Freedom Broker.
 Ты оцениваешь работу ОПЕРАТОРА в диалоге с клиентом по чек-листу. Отвечай строго по формулировкам критериев.
@@ -13,8 +13,8 @@ const SYSTEM = `Ты — эксперт службы контроля качес
 3. Диалоги бывают на русском (RU), казахском (KZ) и английском (EN). Язык клиента определяй по репликам клиента.
 4. Звонки (voice call) — это автоматическая расшифровка речи: ошибки распознавания не являются ошибками оператора. Оценивай по смыслу так же, как чаты.
 5. Временные факты (паузы, первая реакция) уже посчитаны кодом — используй блок <timing_facts>, не пересчитывай.
-6. N/A ставь только если у критерия есть условие N/A и оно действительно выполнено. Иначе — да/нет или значение шкалы.
-7. evidence_ids — id реплик (m001...), на которых основан вывод (1–4 самых показательных). Для «нет» укажи checked_range — участок, где ожидалось действие (например, первый ответ оператора для приветствия; последние реплики оператора для завершения).
+6. N/A ставь только если na_allowed=true; если задано условие N/A, оно должно выполняться. Иначе — да/нет или значение шкалы.
+7. evidence_ids — id реплик (m001...), на которых основан вывод (1–4 самых показательных). Для «нет» (кроме gross_error, где «нет» означает отсутствие нарушения) укажи checked_range — участок, где ожидалось действие (например, первый ответ оператора для приветствия; последние реплики оператора для завершения).
 8. explanation — 1–2 предложения на русском, конкретно: что сделал/не сделал оператор, со ссылкой на id реплик.
 9. Не будь снисходителен: если требование критерия выполнено не полностью (например, поздоровался, но не представился) — это «нет».
 10. Для шкал выбирай значение, чьё описание точнее всего соответствует ситуации.`;
@@ -30,7 +30,7 @@ export function renderTranscript(conversation) {
   const first = msgs[0] ? Date.parse(msgs[0].timestamp) : NaN;
   const t0 = Number.isNaN(first) || /^\d+:\d{2}/.test(String(msgs[0]?.timestamp)) ? null : first / 1000;
   return msgs.map((m) => {
-    const text = String(m.text ?? '').replace(/\s+/g, ' ').replace(/<\/?transcript>/gi, '');
+    const text = String(m.text ?? '').replace(/\s+/g, ' ').replace(/</g, '‹').replace(/>/g, '›');
     return `[${m.id}] ${fmtOffset(offsetOf(m, t0))} ${m.speaker}: ${text}`;
   }).join('\n');
 }
@@ -45,7 +45,7 @@ export function renderCriterion(c) {
   if (c.gross_error) lines.push('Это критерий грубой ошибки: "yes" означает, что нарушение ВЫЯВЛЕНО, "no" — нарушений нет.');
   lines.push(`Описание: ${c.description}`);
   if (c.scale) for (const s of c.scale) lines.push(`  • ${s.value} — ${s.label}`);
-  lines.push(c.na_allowed && c.na_condition ? `N/A допустимо, если: ${c.na_condition}` : 'N/A недопустимо.');
+  lines.push(c.na_allowed ? (c.na_condition?.trim() ? `N/A допустимо, если: ${c.na_condition}` : 'N/A допустимо (условие не задано).') : 'N/A недопустимо.');
   return lines.join('\n');
 }
 
