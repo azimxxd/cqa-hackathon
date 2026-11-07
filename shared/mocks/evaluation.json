@@ -1,0 +1,67 @@
+{
+  "id": 1,
+  "conversation_id": "mock-ru-001",
+  "checklist_version_id": 1,
+  "status": "done",
+  "criteria": [
+    {
+      "criterion_id": "c01",
+      "original": { "criterion_id": "c01", "answer": "yes", "scale_value": null, "explanation": "Оператор поздоровался на русском (язык клиента) и представился в первом ответе.", "evidence_ids": ["m004"], "checked_range": null },
+      "final":    { "criterion_id": "c01", "answer": "yes", "scale_value": null, "explanation": "Оператор поздоровался на русском (язык клиента) и представился в первом ответе.", "evidence_ids": ["m004"], "checked_range": null },
+      "appealed": false, "weight": 10, "effective_weight": 15.38, "points": 15.38
+    },
+    {
+      "criterion_id": "c02",
+      "original": { "criterion_id": "c02", "answer": "na", "scale_value": null, "explanation": "N/A — клиент сразу указал тариф и инструмент, данных для ответа хватало.", "evidence_ids": ["m002"], "checked_range": null },
+      "final":    { "criterion_id": "c02", "answer": "na", "scale_value": null, "explanation": "N/A — клиент сразу указал тариф и инструмент, данных для ответа хватало.", "evidence_ids": ["m002"], "checked_range": null },
+      "appealed": false, "weight": 15, "effective_weight": 0, "points": 0
+    },
+    {
+      "criterion_id": "c03",
+      "original": { "criterion_id": "c03", "answer": "na", "scale_value": null, "explanation": "N/A — общий вопрос о тарифах, идентификация не требовалась.", "evidence_ids": ["m002"], "checked_range": null },
+      "final":    { "criterion_id": "c03", "answer": "na", "scale_value": null, "explanation": "N/A — общий вопрос о тарифах, идентификация не требовалась.", "evidence_ids": ["m002"], "checked_range": null },
+      "appealed": false, "weight": 20, "effective_weight": 0, "points": 0
+    },
+    {
+      "criterion_id": "c04",
+      "original": { "criterion_id": "c04", "answer": null, "scale_value": 15, "explanation": "Оба вопроса закрыты, но не уточнено, есть ли комиссия биржи сверх тарифа.", "evidence_ids": ["m005", "m007"], "checked_range": null },
+      "final":    { "criterion_id": "c04", "answer": null, "scale_value": 15, "explanation": "Оба вопроса закрыты, но не уточнено, есть ли комиссия биржи сверх тарифа.", "evidence_ids": ["m005", "m007"], "checked_range": null },
+      "appealed": false, "weight": 20, "effective_weight": 30.77, "points": 23.08
+    },
+    {
+      "criterion_id": "c05",
+      "original": { "criterion_id": "c05", "answer": "yes", "scale_value": null, "explanation": "Оператор вежлив; недовольства клиент не выражал.", "evidence_ids": ["m004", "m007"], "checked_range": null },
+      "final":    { "criterion_id": "c05", "answer": "yes", "scale_value": null, "explanation": "Оператор вежлив; недовольства клиент не выражал.", "evidence_ids": ["m004", "m007"], "checked_range": null },
+      "appealed": false, "weight": 15, "effective_weight": 23.08, "points": 23.08
+    },
+    {
+      "criterion_id": "c06",
+      "original": { "criterion_id": "c06", "answer": null, "scale_value": 7, "explanation": "Ответы ясные, но на второй вопрос пауза 80 с без предупреждения об ожидании.", "evidence_ids": ["m006", "m007"], "checked_range": null },
+      "final":    { "criterion_id": "c06", "answer": null, "scale_value": 7, "explanation": "Ответы ясные, но на второй вопрос пауза 80 с без предупреждения об ожидании.", "evidence_ids": ["m006", "m007"], "checked_range": null },
+      "appealed": false, "weight": 15, "effective_weight": 23.08, "points": 16.15
+    },
+    {
+      "criterion_id": "c07",
+      "original": { "criterion_id": "c07", "answer": "no", "scale_value": null, "explanation": "Завершение — Нет. После благодарности клиента оператор закрыл чат без прощания и без предложения помощи.", "evidence_ids": ["m009"], "checked_range": { "from": "m007", "to": "m009" } },
+      "final":    { "criterion_id": "c07", "answer": "no", "scale_value": null, "explanation": "Завершение — Нет. После благодарности клиента оператор закрыл чат без прощания и без предложения помощи.", "evidence_ids": ["m009"], "checked_range": { "from": "m007", "to": "m009" } },
+      "appealed": false, "weight": 5, "effective_weight": 7.69, "points": 0
+    },
+    {
+      "criterion_id": "c08",
+      "original": { "criterion_id": "c08", "answer": "no", "scale_value": null, "explanation": "Оскорблений, предложений в обход компании и раскрытия данных нет.", "evidence_ids": [], "checked_range": { "from": "m001", "to": "m009" } },
+      "final":    { "criterion_id": "c08", "answer": "no", "scale_value": null, "explanation": "Оскорблений, предложений в обход компании и раскрытия данных нет.", "evidence_ids": [], "checked_range": { "from": "m001", "to": "m009" } },
+      "appealed": false, "weight": 0, "effective_weight": 0, "points": 0
+    }
+  ],
+  "sections": {
+    "s1": { "points": 15.38, "max": 15.38 },
+    "s2": { "points": 23.08, "max": 30.77 },
+    "s3": { "points": 39.23, "max": 53.85 }
+  },
+  "total": 77.69,
+  "original_total": 77.69,
+  "gross_error": false,
+  "cost_usd": 0.0006,
+  "model": "gemini-2.5-flash",
+  "created_at": "2026-11-08T10:00:00Z"
+}

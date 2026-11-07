@@ -1,0 +1,17 @@
+{
+  "conversation_id": "mock-ru-001",
+  "channel": "agent chat",
+  "language": "RU",
+  "audio_url": null,
+  "messages": [
+    { "id": "m001", "idx": 0, "timestamp": "00:00", "offset_sec": 0, "speaker": "bot", "text": "Здравствуйте! Я виртуальный помощник. Опишите вопрос, и я переведу вас на оператора." },
+    { "id": "m002", "idx": 1, "timestamp": "00:15", "offset_sec": 15, "speaker": "client", "text": "Добрый день. Какая комиссия за сделки с американскими акциями на базовом тарифе?" },
+    { "id": "m003", "idx": 2, "timestamp": "00:20", "offset_sec": 20, "speaker": "system", "text": "Чат переведён на оператора." },
+    { "id": "m004", "idx": 3, "timestamp": "01:05", "offset_sec": 65, "speaker": "operator", "text": "Здравствуйте! Меня зовут Айгерим, сейчас подскажу." },
+    { "id": "m005", "idx": 4, "timestamp": "01:40", "offset_sec": 100, "speaker": "operator", "text": "На базовом тарифе комиссия за сделку с американскими акциями — 0,1% от суммы, минимум 1 USD." },
+    { "id": "m006", "idx": 5, "timestamp": "02:10", "offset_sec": 130, "speaker": "client", "text": "А за хранение бумаг что-то берётся?" },
+    { "id": "m007", "idx": 6, "timestamp": "03:30", "offset_sec": 210, "speaker": "operator", "text": "За хранение на базовом тарифе плата не взимается. Депозитарная комиссия включена в тариф." },
+    { "id": "m008", "idx": 7, "timestamp": "03:45", "offset_sec": 225, "speaker": "client", "text": "Понял, спасибо." },
+    { "id": "m009", "idx": 8, "timestamp": "04:50", "offset_sec": 290, "speaker": "system", "text": "Чат закрыт оператором." }
+  ]
+}

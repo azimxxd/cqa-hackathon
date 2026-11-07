@@ -1,0 +1,17 @@
+{
+  "name": "cqa-hackathon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Conversation Quality Analytics prototype (Freedom Broker CQA hackathon)",
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/index.js",
+    "test": "node --test",
+    "eval": "node --env-file-if-exists=.env eval/run.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
