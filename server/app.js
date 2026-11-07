@@ -1,4 +1,5 @@
 import { appealRoutes } from './routes/appeals.js';
+import { statsRoutes } from './routes/stats.js';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { conversationRoutes } from './routes/conversations.js';
@@ -13,7 +14,7 @@ export function createApp(db, options = {}) {
  app.use(express.json({limit:'5mb'}));
  app.get('/api/health',(_req,res)=>res.json({ok:true}));
  app.locals.jobs=jobs;
- app.use('/api',jobRoutes(jobs),appealRoutes(db));
+ app.use('/api',jobRoutes(jobs),appealRoutes(db),statsRoutes(db));
  app.use('/api',conversationRoutes(db),checklistRoutes(db),evaluationRoutes(db));
  app.use('/api',(_req,res)=>res.status(404).json({error:'Route not found'}));
  app.use(express.static(fileURLToPath(new URL('../web',import.meta.url))));

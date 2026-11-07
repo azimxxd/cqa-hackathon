@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { fixture } from './routes.test.js';
+import { fixture } from './test-helpers.js';
 const mock=JSON.parse(readFileSync(new URL('../shared/mocks/evaluation.json',import.meta.url)));
 async function evaluate(request){
  const {body:{job_id}}=await request('/evaluate',{conversation_ids:'all',checklist_version_id:1});
