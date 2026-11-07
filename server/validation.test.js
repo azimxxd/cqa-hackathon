@@ -15,6 +15,9 @@ test("server and AI validators agree on the complete CriterionResult contract", 
     cases.push([c, r, true]);
     for (const patch of [
       { criterion_id: "wrong" },
+      { checked_range: false },
+      { checked_range: "" },
+      { checked_range: 0 },
       { explanation: 42 },
       { evidence_ids: "m004" },
       { evidence_ids: [42] },

@@ -45,8 +45,8 @@ export function validateResult(criterion, result, conversation) {
   if (result.answer === "no" && !criterion.gross_error && !range)
     throw new Error("checked_range required for no");
   if (
-    range &&
-    (!ids.has(range.from) ||
+    range != null &&
+    (typeof range !== "object" || Array.isArray(range) || !ids.has(range.from) ||
       !ids.has(range.to) ||
       conversation.messages.findIndex((m) => m.id === range.from) >
         conversation.messages.findIndex((m) => m.id === range.to))
