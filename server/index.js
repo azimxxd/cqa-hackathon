@@ -4,6 +4,7 @@ import { openDatabase } from './db.js';
 const db = openDatabase();
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { importGroup } from './import.js';
 import { mockRouter } from './routes/mock.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -11,6 +12,10 @@ const app = express();
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+
+app.post('/api/import', async (req, res, next) => {
+  try { res.json({ imported: await importGroup(db, req.body.group_id) }); } catch (e) { next(e); }
+});
 
 // TODO(Азамат): replace mock routes with real ones (routes/*.js) as they land.
 app.use('/api', mockRouter);
