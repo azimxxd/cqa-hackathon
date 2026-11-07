@@ -1,1 +1,1 @@
-// Owner: Нурлат. Validates one CriterionResult against the criterion and the conversation.
+// Owner: Алдияр. Validates one CriterionResult against the criterion and the conversation.

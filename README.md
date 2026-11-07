@@ -21,17 +21,17 @@ npm start              # http://localhost:3000
 | Кто | Зона | Папки |
 |---|---|---|
 | Азамат | Сервер, БД, расчёт итога, контракты | `server/`, `shared/` |
-| Алдияр | Интерфейс | `web/` |
-| Нурлат | Оценка моделью, проверка точности | `ai/`, `eval/` |
+| Нурлат | Интерфейс | `web/` |
+| Алдияр | Оценка моделью, проверка точности | `ai/`, `eval/` |
 
 ## Как работаем с git
 
 ```bash
 git checkout main && git pull
-git checkout -b aldiyar/transcript-view   # префикс — своё имя
+git checkout -b nurlat/transcript-view   # префикс — своё имя
 # ...работа...
 git add -A && git commit -m "web: transcript view"
-git push -u origin aldiyar/transcript-view
+git push -u origin nurlat/transcript-view
 gh pr create --fill && gh pr merge --squash --delete-branch
 ```
 

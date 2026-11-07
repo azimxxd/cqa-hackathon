@@ -1,4 +1,4 @@
-// Owner: Алдияр. All HTTP calls go through here; shapes are in shared/schemas.md.
+// Owner: Нурлат. All HTTP calls go through here; shapes are in shared/schemas.md.
 import { API_BASE } from './config.js';
 
 async function request(method, path, body) {

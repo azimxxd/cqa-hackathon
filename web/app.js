@@ -1,4 +1,4 @@
-// Owner: Алдияр. Placeholder screen that proves the API wiring; replace with real views/.
+// Owner: Нурлат. Placeholder screen that proves the API wiring; replace with real views/.
 import { api } from './api.js';
 
 const root = document.getElementById('cqa-root');
