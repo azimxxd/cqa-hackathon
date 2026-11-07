@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { evaluateConversation } from "../ai/evaluate.js";
+import { evaluateConversation, PROMPT_VERSION, modelName } from "../ai/evaluate.js";
 import { getChecklist, now, transaction } from "./db.js";
 import { getConversation } from "./import.js";
 import { createEvaluation, getEvaluation } from "./evaluations.js";
@@ -39,15 +39,11 @@ export async function fakeEvaluate(conversation, criteria) {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export function createJobService(db, options = {}) {
   const fake = options.fake ?? process.env.CQA_FAKE_LLM === "1";
-  const model =
-    options.model ??
-    (fake
-      ? "fake"
-      : process.env.LLM_PROVIDER === "ollama"
-        ? process.env.OLLAMA_MODEL || "qwen2.5:14b"
-        : process.env.GEMINI_MODEL || "gemini-2.5-flash");
-  const promptVersion =
-    options.promptVersion ?? process.env.PROMPT_VERSION ?? "v1";
+  const model = options.model ?? (fake ? "fake" : modelName());
+  const promptVersion = options.promptVersion ?? (fake ? "fake" : PROMPT_VERSION);
+  const promptKey = checklist => `${promptVersion}|frt=${checklist.first_reaction_threshold_sec ?? 180}`;
+  // Timing threshold affects c06 only; unrelated criteria remain reusable.
+  const cacheKey = (checklist, criterion) => criterion.id === "c06" ? promptKey(checklist) : `${promptVersion}|frt=independent`;
   const evaluate =
     options.evaluate ?? (fake ? fakeEvaluate : evaluateConversation);
   const concurrency = Number(
@@ -109,6 +105,10 @@ export function createJobService(db, options = {}) {
     const evaluation = db
       .prepare("SELECT * FROM evaluations WHERE id=?")
       .get(item.evaluation_id);
+    if (evaluation.status === "done") return; // COMMIT may have preceded the last job persist.
+    const data = JSON.parse(evaluation.data);
+    if (item.model !== model || item.prompt_key !== promptKey(getChecklist(db,evaluation.checklist_version_id)))
+      throw Error("модель/версия промпта изменились с момента постановки; поставьте оценку заново");
     const conversation = getConversation(db, evaluation.conversation_id),
       checklist = getChecklist(db, evaluation.checklist_version_id);
     db.prepare("UPDATE evaluations SET status='running' WHERE id=?").run(
@@ -122,14 +122,16 @@ export function createJobService(db, options = {}) {
           `SELECT cr.original FROM criterion_results cr JOIN evaluations e ON e.id=cr.evaluation_id
     WHERE e.conversation_id=? AND e.status='done' AND cr.criterion_hash=? AND cr.prompt_version=? AND cr.model=? ORDER BY e.id DESC LIMIT 1`,
         )
-        .get(conversation.conversation_id, c.hash, promptVersion, model);
+        .get(conversation.conversation_id, c.hash, cacheKey(checklist,c), model);
       if (cached) {
         const result = { ...JSON.parse(cached.original), criterion_id: c.id };
-        // Disabling N/A cannot invent a yes/no answer. Fail explicitly, without an LLM call.
-        validateResult(c, result, conversation);
-        results.set(c.id, result);
+        try {
+          validateResult(c, result, conversation);
+          results.set(c.id, result);
+        } catch { missing.push(c); }
       } else missing.push(c);
     }
+    db.prepare("UPDATE evaluations SET data=? WHERE id=?").run(JSON.stringify({...data,evaluated_criteria:missing.map(c=>c.id),full_eval:missing.length === checklist.criteria.length}),evaluation.id);
     if (missing.length) {
       for (let attempt = 0; ; attempt++) {
         try {
@@ -137,7 +139,7 @@ export function createJobService(db, options = {}) {
             ...checklist,
             prompt_version: promptVersion,
             model,
-          });
+          }, {noCache:true});
           logCalls(evaluation.id, response?.calls);
           if (!Array.isArray(response?.results))
             throw Object.assign(Error("AI results must be an array"), {
@@ -171,7 +173,7 @@ export function createJobService(db, options = {}) {
     }
     transaction(db, () => {
       const insert = db.prepare(
-        "INSERT OR REPLACE INTO criterion_results VALUES (?,?,?,?,?,?,?)",
+        "INSERT INTO criterion_results VALUES (?,?,?,?,?,?,?)",
       );
       for (const c of checklist.criteria) {
         const result = JSON.stringify(results.get(c.id));
@@ -179,7 +181,7 @@ export function createJobService(db, options = {}) {
           evaluation.id,
           c.id,
           c.hash,
-          promptVersion,
+          cacheKey(checklist,c),
           model,
           result,
           result,
@@ -211,7 +213,7 @@ export function createJobService(db, options = {}) {
             });
             db.prepare(
               "UPDATE evaluations SET status='error',data=? WHERE id=?",
-            ).run(JSON.stringify({ error: error.message }), item.evaluation_id);
+            ).run(JSON.stringify({...JSON.parse(db.prepare("SELECT data FROM evaluations WHERE id=?").get(item.evaluation_id).data), error: error.message }), item.evaluation_id);
           },
         )
         .finally(() => {
@@ -242,7 +244,8 @@ export function createJobService(db, options = {}) {
         body.checklist_version_id,
         "checklist_version_id",
       );
-      if (!getChecklist(db, versionId)) throw fail(404, "Checklist not found");
+      const checklist = getChecklist(db,versionId);
+      if (!checklist) throw fail(404, "Checklist not found");
       const ids =
         body.conversation_ids === "all"
           ? db
@@ -272,7 +275,9 @@ export function createJobService(db, options = {}) {
       transaction(db, () => {
         job.items = ids.map((id) => ({
           conversation_id: id,
-          evaluation_id: createEvaluation(db, id, versionId, model),
+          evaluation_id: createEvaluation(db, id, versionId, model, {prompt_key:promptKey(checklist)}),
+          model,
+          prompt_key:promptKey(checklist),
           status: "queued",
         }));
         persist(job);

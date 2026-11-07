@@ -19,7 +19,7 @@ export async function finish(service, id) {
 }
 async function scenario(id, mutate, check, options = {}) {
   const previousFetch = globalThis.fetch;
-  const keys = ['GEMINI_API_KEY','AI_CACHE_DIR','LLM_PROVIDER','CQA_FAKE_LLM','GEMINI_MAX_ATTEMPTS','GEMINI_MAX_BACKOFF_MS'];
+  const keys = ['GEMINI_API_KEY','AI_CACHE_DIR','LLM_PROVIDER','CQA_FAKE_LLM','GEMINI_MAX_ATTEMPTS','GEMINI_MAX_BACKOFF_MS','PROMPT_VERSION'];
   const env = Object.fromEntries(keys.map(k => [k, process.env[k]]));
   process.env.GEMINI_API_KEY = 'stub';
   process.env.LLM_PROVIDER = 'gemini';
@@ -46,6 +46,7 @@ async function scenario(id, mutate, check, options = {}) {
   };
   try {
     saveConversations(db, [{...conversation,conversation_id:id}], 'STUB');
+    if (options.prewarm) await evaluateConversation({...conversation,conversation_id:id},getChecklist(db).criteria,getChecklist(db));
     service = createJobService(db, {retries:options.retries ?? 0,backoffMs:0});
     const run = async (version = 1) => finish(service,service.submit({conversation_ids:'all',checklist_version_id:version}).job_id);
     const job = await run();
@@ -85,3 +86,21 @@ test('integration: exhausted 429 has bounded provider and server retries and log
   assert.equal(job.status,'error'); assert.match(job.errors[0].error,/Gemini HTTP 429/);
   assert.equal(requests.length,4); assert.equal(db.prepare('SELECT COUNT(*) n FROM llm_calls').get().n,4);
 },{rateLimit:true,retries:1}));
+
+test('integration: server ignores AI memCache, imports AI model/version and invalidates old prompt keys',()=>scenario('int-cache',null,async({db,requests,run,service})=>{
+  assert.equal(requests.length,2); // standalone AI cache was warm before the server request
+  const rows=db.prepare('SELECT prompt_version,model FROM criterion_results').all();
+  assert.ok(rows.every(r=>r.prompt_version.startsWith(`${PROMPT_VERSION}|frt=`) && r.model===modelName()));
+  assert.equal((await run()).status,'done');assert.equal(requests.length,2);
+  db.prepare('UPDATE criterion_results SET prompt_version=?').run('old-ai-prompt|frt=180');
+  assert.equal((await run()).status,'done');assert.equal(requests.length,3);
+  const v=saveChecklist(db,{...getChecklist(db),first_reaction_threshold_sec:30});
+  assert.equal((await run(v.id)).status,'done');
+  assert.deepEqual(requests.at(-1).body.generationConfig.responseSchema.properties.results.items.properties.criterion_id.enum,['c06']);
+  await service.close();
+  const next=createJobService(db,{promptVersion:`${PROMPT_VERSION}-next`,retries:0});
+  try {
+    assert.equal((await finish(next,next.submit({conversation_ids:'all',checklist_version_id:v.id}).job_id)).status,'done');
+    assert.equal(requests.length,5);
+  }finally {await next.close();}
+},{prewarm:true}));
