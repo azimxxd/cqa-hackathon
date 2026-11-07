@@ -44,12 +44,14 @@ test("checklist forbids enabling N/A without a nonempty condition", () =>
     }
   }));
 
-test("evaluation can be opened by its stable ID for appeal review",()=>fixture(async(request,db)=>{
-  const {createEvaluation}=await import('./evaluations.js');
-  const id=createEvaluation(db,'mock-ru-001',1,'test');
-  const response=await request(`/evaluations/${id}`);
-  assert.equal(response.status,200);assert.equal(response.body.id,id);
-  assert.equal(response.body.conversation_id,'mock-ru-001');
-  assert.equal((await request('/evaluations/999999')).status,404);
-  assert.equal((await request('/evaluations/not-an-id')).status,400);
-}));
+test("evaluation can be opened by its stable ID for appeal review", () =>
+  fixture(async (request, db) => {
+    const { createEvaluation } = await import("./evaluations.js");
+    const id = createEvaluation(db, "mock-ru-001", 1, "test");
+    const response = await request(`/evaluations/${id}`);
+    assert.equal(response.status, 200);
+    assert.equal(response.body.id, id);
+    assert.equal(response.body.conversation_id, "mock-ru-001");
+    assert.equal((await request("/evaluations/999999")).status, 404);
+    assert.equal((await request("/evaluations/not-an-id")).status, 400);
+  }));
