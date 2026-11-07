@@ -2,7 +2,7 @@ import { requestJson } from "./request.js";
 // Owner: Алдияр. Local provider via Ollama for the local-LLM variant.
 // /api/chat with structured output (format = JSON schema), temperature 0.
 
-function toPlainSchema(s) {
+export function toPlainSchema(s) {
   // Ollama expects JSON Schema; convert OpenAPI-style `nullable` to type unions.
   if (Array.isArray(s)) return s.map(toPlainSchema);
   if (!s || typeof s !== "object") return s;

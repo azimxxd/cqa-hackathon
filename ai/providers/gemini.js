@@ -1,6 +1,29 @@
 // Owner: Алдияр. Gemini provider: temperature 0, JSON response, returns text + token usage.
 // REST generateContent; retries with exponential backoff on 429/5xx/network errors.
 
+let keyIndex = 0;
+export function getKeys() {
+  const raw =
+    [
+      process.env.GEMINI_API_KEYS,
+      process.env.GEMINI_API_Keys,
+      process.env.GEMINI_API_KEY,
+    ].find((value) => typeof value === "string" && value.trim()) || "";
+  const keys = [
+    ...new Set(
+      raw
+        .split(/[\s,;]+/)
+        .map((key) => key.trim())
+        .filter(Boolean),
+    ),
+  ];
+  if (!keys.length)
+    throw Object.assign(Error("GEMINI_API_KEY is not set (see .env.example)"), {
+      fatal: true,
+      provider: "gemini",
+    });
+  return keys;
+}
 const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 import { requestJson } from "./request.js";
 
@@ -8,10 +31,10 @@ export async function generate({
   system,
   user,
   schema,
-  model = process.env.GEMINI_MODEL || "gemini-2.5-flash",
+  model = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
 }) {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error("GEMINI_API_KEY is not set (see .env.example)");
+  const keys = getKeys();
+  const maxAttempts = Number(process.env.GEMINI_MAX_ATTEMPTS ?? 4);
   const generationConfig = {
     temperature: 0,
     topP: 1,
@@ -34,10 +57,17 @@ export async function generate({
     model,
     init: {
       method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     },
-    maxAttempts: Number(process.env.GEMINI_MAX_ATTEMPTS ?? 4),
+    headersForAttempt: () => ({
+      "content-type": "application/json",
+      "x-goog-api-key": keys[keyIndex++ % keys.length],
+    }),
+    rotateKey: (status, attempt) =>
+      [400, 403].includes(status) &&
+      attempt + 1 < Math.min(keys.length, maxAttempts),
+    maxAttempts,
     maxBackoffMs: Number(process.env.GEMINI_MAX_BACKOFF_MS ?? 30000),
     baseBackoffMs: 2000,
     usage: (json) => ({

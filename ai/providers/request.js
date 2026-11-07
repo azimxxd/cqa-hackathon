@@ -9,6 +9,8 @@ export async function requestJson({
   maxBackoffMs,
   baseBackoffMs,
   usage,
+  headersForAttempt,
+  rotateKey,
 }) {
   if (
     !Number.isInteger(maxAttempts) ||
@@ -27,15 +29,19 @@ export async function requestJson({
       latency_ms: 0,
       raw_response: "",
     };
-    let response, error;
+    let response,
+      error,
+      rotate = false;
     try {
       response = await fetch(url, {
         ...init,
+        ...(headersForAttempt ? { headers: headersForAttempt(attempt) } : {}),
         signal: AbortSignal.timeout(provider === "gemini" ? 180000 : 600000),
       });
       const raw = await response.text();
       call.raw_response = raw;
       if (!response.ok) {
+        rotate = rotateKey?.(response.status, attempt) === true;
         const retryable = response.status === 429 || response.status >= 500;
         throw Object.assign(
           Error(
@@ -69,6 +75,7 @@ export async function requestJson({
       call.latency_ms = Date.now() - start;
       if (!call.raw_response) call.raw_response = error.message;
       calls.push(call);
+      if (rotate && attempt + 1 < maxAttempts) continue;
       if (error.retryable !== true || attempt + 1 === maxAttempts) {
         error.calls = calls;
         throw error;

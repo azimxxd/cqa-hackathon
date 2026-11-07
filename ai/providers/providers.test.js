@@ -11,6 +11,8 @@ async function stub(fn) {
   const previous = fetch,
     env = { ...process.env };
   process.env.GEMINI_API_KEY = "stub";
+  delete process.env.GEMINI_API_KEYS;
+  delete process.env.GEMINI_API_Keys;
   process.env.GEMINI_MAX_ATTEMPTS = "2";
   process.env.GEMINI_MAX_BACKOFF_MS = "0";
   process.env.OLLAMA_MAX_BACKOFF_MS = "0";
@@ -187,6 +189,44 @@ test("successful HTTP with malformed Gemini content keeps all logs and gets only
           return true;
         },
       );
+      assert.equal(n, 2);
+    }
+  }));
+
+test("Gemini rotates forbidden keys within the attempt budget and preserves both HTTP logs", () =>
+  stub(async () => {
+    process.env.GEMINI_API_KEYS = "stub-a,stub-b";
+    const seen = [];
+    globalThis.fetch = async (url, init) => {
+      seen.push(init.headers["x-goog-api-key"]);
+      assert.ok(!String(url).includes("stub-"));
+      return seen.length === 1
+        ? Response.json({ error: "forbidden" }, { status: 403 })
+        : Response.json({
+            candidates: [{ content: { parts: [{ text: '{"results":[]}' }] } }],
+          });
+    };
+    const result = await gemini({ system: "s", user: "u" });
+    assert.equal(result.calls.length, 2);
+    assert.equal(seen.length, 2);
+    assert.notEqual(seen[0], seen[1]);
+  }));
+test("Gemini exhausts invalid keys as fatal 403 and never exceeds GEMINI_MAX_ATTEMPTS", () =>
+  stub(async () => {
+    for (const pool of ["stub-a,stub-b", "stub-a,stub-b,stub-c"]) {
+      process.env.GEMINI_API_KEYS = pool;
+      let n = 0;
+      globalThis.fetch = async () => {
+        n++;
+        return Response.json({ error: "forbidden" }, { status: 403 });
+      };
+      await assert.rejects(gemini({ system: "s", user: "u" }), (error) => {
+        assert.equal(error.status, 403);
+        assert.equal(error.fatal, true);
+        assert.equal(error.retryable, false);
+        assert.equal(error.calls.length, 2);
+        return true;
+      });
       assert.equal(n, 2);
     }
   }));

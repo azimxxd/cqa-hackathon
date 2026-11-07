@@ -19,6 +19,7 @@ test("truncated disk cache is reevaluated and persists a valid replacement for t
   Object.assign(process.env, {
     AI_CACHE_DIR: dir,
     GEMINI_API_KEY: "stub",
+    GEMINI_API_KEYS: "stub",
     LLM_PROVIDER: "gemini",
   });
   const conversation = {
