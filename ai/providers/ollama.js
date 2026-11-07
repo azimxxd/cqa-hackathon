@@ -12,8 +12,8 @@ export function toPlainSchema(s) {
     out[k] = toPlainSchema(v);
   }
   if (s.nullable) {
-    out.type = [s.type, "null"];
-    if (out.enum) out.enum = [...out.enum, null];
+    out.type = [...new Set([].concat(out.type, "null"))];
+    if (out.enum && !out.enum.includes(null)) out.enum = [...out.enum, null];
   }
   return out;
 }

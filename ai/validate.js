@@ -26,13 +26,16 @@ export function normalize(raw, criterion, conversation) {
       : [];
   const from = fixId(raw.checked_from ?? raw.checked_range?.from);
   const to = fixId(raw.checked_to ?? raw.checked_range?.to);
+  const scale = raw.scale_value;
   return {
     criterion_id: raw.criterion_id,
     answer,
     scale_value:
-      raw.scale_value == null || raw.scale_value === ""
+      scale == null || (typeof scale === "string" && scale.trim() === "")
         ? null
-        : Number(raw.scale_value),
+        : typeof scale === "number" || typeof scale === "string"
+          ? Number(scale)
+          : NaN,
     explanation: raw.explanation,
     evidence_ids: [...new Set(evidence.map(fixId).filter(Boolean))],
     checked_range: from || to ? { from, to } : null,
@@ -70,7 +73,11 @@ export function validateResult(r, criterion, conversation) {
     bad(
       `несуществующие или неверные evidence_ids ${JSON.stringify(r.evidence_ids)}`,
     );
-  if (r.checked_range != null && (typeof r.checked_range !== "object" || Array.isArray(r.checked_range))) bad("checked_range должен быть объектом или null");
+  if (
+    r.checked_range != null &&
+    (typeof r.checked_range !== "object" || Array.isArray(r.checked_range))
+  )
+    bad("checked_range должен быть объектом или null");
   else if (r.checked_range) {
     const { from, to } = r.checked_range;
     if (!ids.has(from) || !ids.has(to)) bad("несуществующий checked_range");

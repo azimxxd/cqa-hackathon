@@ -31,9 +31,12 @@ export function modelName() {
 
 export function costUsd(model, input, output) {
   if (String(model).startsWith("ollama/")) return 0;
-  const pin = Number(process.env.PRICE_INPUT_PER_M ?? 0.3);
-  const pout = Number(process.env.PRICE_OUTPUT_PER_M ?? 2.5);
-  return +((input * pin + output * pout) / 1e6).toFixed(6);
+  const pin = Number(process.env.PRICE_INPUT_PER_M?.trim() || 0.3);
+  const pout = Number(process.env.PRICE_OUTPUT_PER_M?.trim() || 2.5);
+  return +(
+    ((Number(input) || 0) * pin + (Number(output) || 0) * pout) /
+    1e6
+  ).toFixed(6);
 }
 
 export function criterionHash(c) {
