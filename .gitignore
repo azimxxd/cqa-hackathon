@@ -3,3 +3,8 @@ node_modules/
 data/*.db
 data/*.db-*
 .DS_Store
+data/*.json
+data/ai-cache/
+eval/reports/
+eval/.cache/
+eval/data/
