@@ -21,6 +21,7 @@ const ids = ["stub-a", "stub-b"],
 let db, app, server, base;
 Object.assign(process.env, {
   GEMINI_API_KEY: "stub",
+  GEMINI_API_KEYS: "stub",
   GEMINI_MODEL: "gemini-2.5-flash",
   LLM_PROVIDER: "gemini",
   CQA_FAKE_LLM: "0",
