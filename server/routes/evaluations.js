@@ -23,5 +23,10 @@ export function evaluationRoutes(db) {
     if (!row) throw fail(404, "Evaluation not found");
     res.json(getEvaluation(db, row.id));
   });
+  router.get("/evaluations/:id", (req,res) => {
+    const evaluation = getEvaluation(db,positiveId(req.params.id));
+    if (!evaluation) throw fail(404,"Evaluation not found");
+    res.json(evaluation);
+  });
   return router;
 }
