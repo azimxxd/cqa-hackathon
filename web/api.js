@@ -1,19 +1,59 @@
-// Owner: Нурлат. All HTTP calls go through here; shapes are in shared/schemas.md.
-import { API_BASE } from './config.js';
+import { API_BASE } from "./config.js";
 
-async function request(method, path, body) {
-  const res = await fetch(`${API_BASE}/api${path}`, {
-    method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`${method} ${path}: ${res.status}`);
-  return res.json();
+export class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
 }
-
+async function request(method, path, body) {
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/api${path}`, {
+      method,
+      headers:
+        body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(
+      "Не удалось связаться с сервером. Проверьте подключение и попробуйте ещё раз.",
+      0,
+    );
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok)
+    throw new ApiError(
+      data?.error || "Не удалось выполнить запрос. Попробуйте ещё раз.",
+      res.status,
+    );
+  if (data === null)
+    throw new ApiError(
+      "Сервер вернул некорректный ответ. Попробуйте обновить страницу.",
+      res.status,
+    );
+  return data;
+}
+const encoded = encodeURIComponent;
 export const api = {
-  conversations: () => request('GET', '/conversations'),
-  conversation: (id) => request('GET', `/conversations/${encodeURIComponent(id)}`),
-  checklist: (id = 'latest') => request('GET', `/checklists/${id}`),
-  evaluation: (conversationId) => request('GET', `/evaluations?conversation_id=${encodeURIComponent(conversationId)}`),
+  conversations: () => request("GET", "/conversations"),
+  conversation: (id) => request("GET", `/conversations/${encoded(id)}`),
+  checklists: () => request("GET", "/checklists"),
+  checklist: (id = "latest") => request("GET", `/checklists/${encoded(id)}`),
+  saveChecklist: (body) => request("POST", "/checklists", body),
+  evaluation: (id, version) =>
+    request(
+      "GET",
+      `/evaluations?conversation_id=${encoded(id)}${version ? `&version=${encoded(version)}` : ""}`,
+    ),
+  evaluationById: (id) => request("GET", `/evaluations/${encoded(id)}`),
+  importGroup: (group_id) => request("POST", "/import", { group_id }),
+  evaluate: (conversation_ids, checklist_version_id) =>
+    request("POST", "/evaluate", { conversation_ids, checklist_version_id }),
+  job: (id) => request("GET", `/jobs/${encoded(id)}`),
+  stats: () => request("GET", "/stats"),
+  appeals: () => request("GET", "/appeals"),
+  appeal: (body) => request("POST", "/appeals", body),
+  decide: (id, body) =>
+    request("POST", `/appeals/${encoded(id)}/decision`, body),
 };
