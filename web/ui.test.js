@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { safeAudio } from "./ui.js";
-import { dialogTable } from "./views.js";
+import { feedList } from "./workspace.js";
 import { api, ApiError } from "./api.js";
 
 test("missing audio never creates a request to /null or /undefined", () => {
@@ -27,12 +27,11 @@ test("missing audio never creates a request to /null or /undefined", () => {
     else delete globalThis.location;
   }
 });
-test("untrusted conversation identifiers and languages remain text in the table", () => {
+test("untrusted conversation identifiers and languages remain text in the feed", () => {
   const payload = '"><img src=x onerror=alert(1)>';
-  const html = dialogTable({
+  const html = feedList({
+    appeals: [],
     search: "",
-    status: "",
-    channel: "",
     conversations: [
       {
         conversation_id: payload,

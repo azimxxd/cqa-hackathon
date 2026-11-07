@@ -38,9 +38,14 @@ async function request(method, path, body, asBlob = false) {
   return data;
 }
 const encoded = encodeURIComponent;
+const transcriptionPath = (id) => `/conversations/${encoded(id)}/transcription`;
+export const audioUrl = (id) => `${API_BASE}/api/audio/${encoded(id)}`;
 export const api = {
   submissionPreview: (params) => request("GET", `/submission/preview?${new URLSearchParams(params)}`),
   submissionDownload: (params) => request("GET", `/submission/download?${new URLSearchParams(params)}`, undefined, true),
+  aiStatus: () => request("GET", "/ai/status"),
+  transcription: (id) => request("GET", transcriptionPath(id)),
+  transcribe: (id) => request("POST", transcriptionPath(id), { force: false }),
   conversations: () => request("GET", "/conversations"),
   conversation: (id) => request("GET", `/conversations/${encoded(id)}`),
   checklists: () => request("GET", "/checklists"),
@@ -53,8 +58,8 @@ export const api = {
     ),
   evaluationById: (id) => request("GET", `/evaluations/${encoded(id)}`),
   importGroup: (group_id) => request("POST", "/import", { group_id }),
-  evaluate: (conversation_ids, checklist_version_id) =>
-    request("POST", "/evaluate", { conversation_ids, checklist_version_id }),
+  evaluate: (conversation_ids, checklist_version_id, transcript_source = "original") =>
+    request("POST", "/evaluate", { conversation_ids, checklist_version_id, transcript_source }),
   job: (id) => request("GET", `/jobs/${encoded(id)}`),
   stats: () => request("GET", "/stats"),
   appeals: () => request("GET", "/appeals"),

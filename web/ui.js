@@ -65,7 +65,7 @@ export function skeleton() {
   return `<div class="cqa-skeleton" aria-label="Загрузка" aria-busy="true"><div></div><div></div><div></div><div></div></div>`;
 }
 export function button(label, action, glyph = "", primary = false, extra = "") {
-  return `<button class="cqa-button ${primary ? "cqa-primary" : "cqa-secondary"} button-sm" data-action="${action}" ${extra}>${glyph ? icon(glyph) : ""}${escape(label)}</button>`;
+  return `<button type="button" class="cqa-button ${primary ? "cqa-primary" : "cqa-secondary"} button-sm" data-action="${action}" ${extra}>${glyph ? icon(glyph) : ""}${escape(label)}</button>`;
 }
 export function safeAudio(value) {
   if (typeof value !== "string" || !value.trim()) return null;

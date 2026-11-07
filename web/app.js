@@ -1,13 +1,15 @@
+import { workspacePage, feedRows, feedList, datasetRows, auditContents, jobProgress, transcriptControls, transcriptMessages } from "./workspace.js";
 import { submissionPage, submissionEmpty, submissionLoading, submissionError, submissionReport } from "./submission.js";
 import { editChecklist, readChecklist, updateCriterionControls } from "./checklist-editor.js";
 import { api } from "./api.js";
 import { escape as e, icon, button, emptyState, skeleton, time } from "./ui.js";
 import {
-  dialogsPage,
-  dialogTable,
-  detailPage,
   appealsPage,
+  assessmentAction,
+  assessmentBasis,
+  evaluationTextSource,
   checklistPage,
+  scorecard,
   statsPage,
 } from "./views.js";
 
@@ -20,8 +22,18 @@ const state = {
   version: null,
   route: "dialogs",
   search: "",
-  channel: "",
-  status: "",
+  filter: "all",
+  role: "operator",
+  group: "",
+  datasetIds: null,
+  selected: null,
+  drawer: false,
+  drawerError: null,
+  textMode: "original",
+  transcription: null,
+  transcriptionStale: false,
+  ai: null,
+  aiError: null,
   appealFilter: "open",
   detail: null,
   checklist: null,
@@ -33,6 +45,7 @@ const state = {
   submissionOptions: { dataset: "DEV", group_id: "DEV", source: "final" },
 };
 let submissionRequest = 0, submissionSnapshot;
+let drawerToken = 0;
 let routeToken = 0,
   noticeTimer;
 const nav = [
@@ -42,18 +55,37 @@ const nav = [
   ["submission", "upload-simple", "Экспорт для жюри"],
   ["stats", "chart-bar", "Статистика"],
 ];
+const isWorkspace = () => ["dialogs", "dialog"].includes(state.route);
+function studioHeader(active, count) {
+  const ai = state.ai;
+  const modelStatus = ai
+    ? [ai.provider, ai.model, ai.configured ? "настроено" : "не настроено"].filter(Boolean).join(" · ")
+    : state.aiError ? `Статус модели недоступен: ${state.aiError}` : "Проверяем статус модели";
+  return `<header class="cqa-studio-header">
+    <a class="cqa-brand" href="#dialogs" aria-label="CQA, к диалогам"><span class="cqa-brand-mark"><i></i><i></i><i></i></span><span class="cqa-brand-word heading-5">cqa<span>.</span></span></a>
+    <nav aria-label="Основная навигация">${nav.map(([id,glyph,label]) => `<a class="cqa-nav-link title-4" href="#${id}" ${id === active ? 'aria-current="page"' : ""}>${icon(glyph)}${label}${id === "appeals" && count ? ` <span class="cqa-nav-count caption-4">${count}</span>` : ""}</a>`).join("")}</nav>
+    ${isWorkspace() ? `<div class="cqa-studio-toolbar">
+      <div class="cqa-studio-actions" role="group" aria-label="Режим работы">${[["operator","Оператор"],["reviewer","Проверяющий"]].map(([id,label]) => `<button class="cqa-studio-chip caption-3" data-role="${id}" aria-pressed="${state.role === id}">${label}</button>`).join("")}</div>
+      ${button("Редактор чек-листа","checklist-drawer","list-checks",false,`aria-expanded="${state.drawer}"`)}
+      <form id="dataset-form" class="cqa-studio-actions">
+        <label class="caption-3">Выборка <input name="group" value="${e(state.group)}" placeholder="Все" maxlength="128" autocomplete="off"></label>
+        <button class="cqa-studio-chip caption-3" type="submit">Открыть</button>
+        ${button("Импортировать","import","upload-simple")}
+        <span id="dataset-error" class="caption-5" role="alert"></span>
+      </form><span class="cqa-model-status caption-5" role="status">${e(modelStatus)}</span></div>` : ""}
+    </header>`;
+}
 function render() {
   const active = state.route === "dialog" ? "dialogs" : state.route;
   document.title = `${state.route === "dialog" && state.detail ? state.detail.conversation.conversation_id : nav.find((n) => n[0] === active)?.[2] || "Страница не найдена"} · CQA`;
   let content;
-  if (state.loading) content = skeleton();
+  if (isWorkspace()) content = workspacePage(state);
+  else if (state.loading) content = skeleton();
   else if (state.error)
     content = `<div class="cqa-page-error" role="alert">${emptyState("Не удалось загрузить данные", state.error, button("Попробовать снова", "refresh", "arrow-clockwise", true))}</div>`;
   else
     content = (
       {
-        dialogs: dialogsPage,
-        dialog: detailPage,
         appeals: appealsPage,
         checklist: checklistPage,
         stats: statsPage,
@@ -67,7 +99,7 @@ function render() {
         ))
     )(state);
   const count = state.appeals.filter((a) => a.status === "open").length;
-  root.innerHTML = `<a class="cqa-skip button-sm" href="#main-content" data-action="skip-main">Перейти к содержимому</a><div class="cqa-shell"><aside class="cqa-sidebar"><a class="cqa-brand" href="#dialogs" aria-label="CQA, к диалогам"><span class="cqa-brand-mark"><i></i><i></i><i></i></span><span class="cqa-brand-word heading-5">cqa<span>.</span></span></a><div class="cqa-workspace-name"><span class="caption-3">Freedom Broker</span><span class="caption-5">Качество общения</span></div><nav aria-label="Основная навигация">${nav.map(([id, glyph, label]) => `<a href="#${id}" class="cqa-nav-link title-4 ${active === id ? "is-active" : ""}" ${active === id ? 'aria-current="page"' : ""}>${icon(glyph)}<span>${label}</span>${id === "appeals" && count ? `<span class="cqa-nav-count caption-4">${count}</span>` : ""}</a>`).join("")}</nav><div class="cqa-sidebar-bottom"><div class="cqa-sidebar-note">${icon("list-checks")}<p class="caption-5">Каждый вывод<br>подтверждается диалогом</p></div><div class="cqa-sidebar-footer"><span class="cqa-team-avatar caption-3">QA</span><div><p class="title-5">Рабочее пространство</p><p class="caption-5">Контроль качества</p></div></div></div></aside><div class="cqa-workspace"><header class="cqa-topbar"><div class="cqa-breadcrumb caption-2"><span>Рабочее пространство</span>${icon("caret-right")}<span>${nav.find((n) => n[0] === active)?.[2] || "Страница"}</span></div><a class="cqa-topbar-brand caption-3" href="#dialogs"><span class="cqa-small-dot"></span>Freedom Broker</a></header><main class="cqa-main" id="main-content" tabindex="-1">${content}</main></div></div><div class="cqa-toast body-6 ${state.notice ? "is-visible" : ""}" role="status" data-tone="${state.notice?.tone || "success"}">${icon(state.notice?.tone === "error" ? "warning-circle" : "check-circle")}<span>${e(state.notice?.message || "")}</span></div><dialog id="cqa-modal" class="cqa-modal" aria-labelledby="modal-title"></dialog>`;
+  root.innerHTML = `<a class="cqa-skip button-sm" href="#main-content" data-action="skip-main">Перейти к содержимому</a><div class="cqa-studio-shell ${isWorkspace() ? "is-workspace" : ""}">${studioHeader(active,count)}<main class="cqa-main" id="main-content" tabindex="-1">${content}</main></div><div class="cqa-toast body-6 ${state.notice ? "is-visible" : ""}" role="status" data-tone="${state.notice?.tone || "success"}">${icon(state.notice?.tone === "error" ? "warning-circle" : "check-circle")}<span>${e(state.notice?.message || "")}</span></div><dialog id="cqa-modal" class="cqa-modal" aria-labelledby="modal-title"></dialog>`;
 }
 function toast(message, tone = "success") {
   clearTimeout(noticeTimer);
@@ -83,6 +115,15 @@ function toast(message, tone = "success") {
     root.querySelector(".cqa-toast")?.classList.remove("is-visible");
   }, 6000);
 }
+async function loadAI() {
+  try {
+    state.ai = await api.aiStatus();
+    state.aiError = null;
+  } catch (error) {
+    state.ai = null;
+    state.aiError = error.message;
+  }
+}
 async function summary() {
   const [conversations, versions, stats, appeals] = await Promise.all([
     api.conversations(),
@@ -90,7 +131,12 @@ async function summary() {
     api.stats(),
     api.appeals(),
   ]);
-  Object.assign(state, { conversations, versions, stats, appeals });
+  const disputed = [...new Set(appeals.filter((a) => a.status === "open").map((a) => a.evaluation_id))];
+  const evaluations = await Promise.allSettled(disputed.map(api.evaluationById));
+  const byId = new Map(evaluations.filter((r) => r.status === "fulfilled").map(({ value }) => [value.id, value.conversation_id]));
+  Object.assign(state, { conversations, versions, stats,
+    appeals: appeals.map((a) => ({ ...a, conversation_id: byId.get(a.evaluation_id) })) });
+  state.disputesIncomplete = evaluations.some((r) => r.status === "rejected");
   if (!state.version) state.version = versions[0]?.id;
 }
 function routeInfo() {
@@ -108,6 +154,7 @@ function routeInfo() {
 }
 async function loadPage(options = {}) {
   const token = ++routeToken;
+  drawerToken++;
   let route;
   try {
     route = routeInfo();
@@ -116,42 +163,64 @@ async function loadPage(options = {}) {
   }
   submissionSnapshot = null;
   state.route = route.page;
+  if (!isWorkspace()) state.drawer = false;
+  state.detail = null;
+  state.transcription = null;
+  state.transcriptionStale = false;
+  state.textMode = "original";
   state.loading = true;
   state.error = null;
   render();
   try {
-    if (options.refresh) await summary();
-    if (route.page === "dialog") {
-      const conversation = await api.conversation(route.id);
-      const version = options.version || route.version;
-      const evaluationId = options.evaluationId || route.evaluationId;
-      const evaluation = evaluationId
-        ? await api.evaluationById(evaluationId)
-        : await api.evaluation(route.id, version).catch((error) => {
-            if (error.status === 404) return null;
-            throw error;
-          });
-      if (
-        evaluation &&
-        evaluation.conversation_id !== conversation.conversation_id
-      )
-        throw Error("Эта оценка относится к другому диалогу.");
-      const checklist = await api.checklist(
-        evaluation?.checklist_version_id || version || state.version,
-      );
-      if (token !== routeToken) return;
-      state.detail = { conversation, evaluation, checklist };
-    } else if (route.page === "checklist") {
-      const checklist = await api.checklist(state.version);
-      if (token !== routeToken) return;
-      state.checklist = checklist;
+    if (options.refresh) await Promise.all([summary(), loadAI()]);
+    if (token !== routeToken) return;
+    if (isWorkspace()) {
+      const id = route.id ?? feedRows(state)[0]?.conversation_id;
+      state.selected = id ?? null;
+      if (id != null) {
+        const conversation = await api.conversation(id);
+        const version = route.version;
+        const evaluationId = route.evaluationId;
+        const evaluation = evaluationId
+          ? await api.evaluationById(evaluationId)
+          : await api.evaluation(id, version).catch((error) => {
+              if (error.status === 404) return null;
+              throw error;
+            });
+        if (
+          evaluation &&
+          evaluation.conversation_id !== conversation.conversation_id
+        )
+          throw Error("Эта оценка относится к другому диалогу.");
+        const checklist = await api.checklist(
+          evaluation?.checklist_version_id || version || state.version,
+        );
+        if (token !== routeToken) return;
+        state.detail = { conversation, evaluation, checklist };
+        if (conversation.channel === "voice call") state.transcription = { status: "loading" };
+      }
+    }
+    if (state.drawer || route.page === "checklist") {
+      try {
+        const checklist = await api.checklist(state.version);
+        if (token !== routeToken) return;
+        state.checklist = checklist;
+        state.drawerError = null;
+      } catch (error) {
+        if (!state.drawer) throw error;
+        if (token !== routeToken) return;
+        state.drawerError = error.message;
+      }
     }
     if (token !== routeToken) return;
     state.loading = false;
     render();
+    if (state.detail?.conversation.channel === "voice call") {
+      readTranscription(state.selected, token);
+    }
     if (options.focus) {
       window.scrollTo({ top: 0, behavior: "instant" });
-      root.querySelector("#page-title")?.focus({ preventScroll: true });
+      root.querySelector("#page-title")?.focus({ preventScroll: state.route !== "dialog" });
     }
     if (route.page === "dialog" && Number.isInteger(route.turn) && route.turn > 0) {
       const message = state.detail.conversation.messages.find((m) => m.idx === route.turn - 1);
@@ -162,6 +231,114 @@ async function loadPage(options = {}) {
     state.loading = false;
     state.error = error.message;
     render();
+  }
+}
+function updateTranscript(redrawMessages = false) {
+  updateAssessmentControls();
+  const controls = root.querySelector("#transcript-controls");
+  if (controls) {
+    const mode = document.activeElement?.dataset.transcript;
+    controls.innerHTML = transcriptControls(state);
+    if (mode) controls.querySelector(`[data-transcript="${CSS.escape(mode)}"]`)?.focus();
+  }
+  const messages = root.querySelector("#transcript-messages");
+  if (redrawMessages && messages && state.detail) {
+    const scroll = messages.scrollTop;
+    const highlighted = new Set([...messages.querySelectorAll(".is-highlighted")].map((m) => m.dataset.message));
+    messages.innerHTML = transcriptMessages(state.detail.conversation, state.transcription, state.textMode);
+    messages.querySelectorAll("[data-message]").forEach((m) => m.classList.toggle("is-highlighted", highlighted.has(m.dataset.message)));
+    messages.scrollTop = scroll;
+  }
+}
+async function readTranscription(id, token, start = false) {
+  try {
+    let result = await (start ? api.transcribe(id) : api.transcription(id));
+    while (token === routeToken) {
+      state.transcription = result;
+      updateTranscript();
+      if (result.status !== "running") return;
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      if (token !== routeToken) return;
+      result = await api.transcription(id);
+    }
+  } catch (error) {
+    if (token !== routeToken) return;
+    state.transcription = { status: "error", error: error.message };
+    updateTranscript();
+  }
+}
+async function toggleDrawer(trigger) {
+  state.drawer = !state.drawer;
+  root.querySelector(".cqa-studio-toolbar [data-action=checklist-drawer]")?.setAttribute("aria-expanded", String(state.drawer));
+  const audit = root.querySelector(".cqa-audit");
+  if (!audit) return;
+  const redraw = () => {
+    audit.innerHTML = auditContents(state);
+    audit.setAttribute("aria-label", state.drawer ? "Редактор чек-листа" : "Оценка диалога");
+  };
+  const request = ++drawerToken;
+  if (!state.drawer) {
+    redraw();
+    if (trigger.closest(".cqa-audit") === audit || !trigger.isConnected)
+      root.querySelector(".cqa-studio-toolbar [data-action=checklist-drawer]")?.focus();
+    return;
+  }
+  state.checklist = null;
+  state.drawerError = null;
+  redraw();
+  const token = routeToken;
+  try {
+    const checklist = await api.checklist(state.version);
+    if (token !== routeToken || request !== drawerToken || !state.drawer) return;
+    state.checklist = checklist;
+    redraw();
+    audit.querySelector("#checklist-title")?.focus();
+    audit.scrollTop = 0;
+  } catch (error) {
+    if (token !== routeToken || request !== drawerToken || !state.drawer) return;
+    state.drawerError = error.message;
+    redraw();
+  }
+}
+async function datasetIds(group) {
+  if (!group) return null;
+  const report = await api.submissionPreview({
+    group_id: group, dataset: group === "PROD" ? "PROD" : "DEV",
+    checklist_version_id: state.version, source: "final", team_name: "Saw-cell",
+  });
+  if (!Array.isArray(report.source_ids)) throw Error("Состав выборки недоступен.");
+  return new Set(report.source_ids);
+}
+function updateFeed() {
+  root.querySelector("#dialog-feed").innerHTML = feedList(state);
+  root.querySelector("#dispute-warning").hidden = state.filter !== "appeals" || !state.disputesIncomplete;
+  const rows = feedRows(state);
+  const index = rows.findIndex((row) => row.conversation_id === state.selected);
+  root.querySelectorAll("[data-adjacent]").forEach((b) => {
+    b.disabled = index < 0 || !rows[index + Number(b.dataset.adjacent)];
+  });
+}
+async function openDataset(form) {
+  const group = form.elements.group.value.trim();
+  const token = routeToken;
+  const submit = form.querySelector("[type=submit]");
+  submit.disabled = true;
+  form.querySelector("#dataset-error").textContent = "";
+  try {
+    // The canonical jury preview exposes the actual persisted group IDs,
+    // including partial groups whose export isn't ready.
+    const ids = await datasetIds(group);
+    if (token !== routeToken || !form.isConnected) return;
+    state.group = group;
+    state.datasetIds = ids;
+    state.search = "";
+    state.filter = "all";
+    if (state.route === "dialog") location.hash = "dialogs";
+    else await loadPage({ focus: true });
+  } catch (error) {
+    if (form.isConnected) form.querySelector("#dataset-error").textContent = error.message;
+  } finally {
+    submit.disabled = false;
   }
 }
 function navigate(id) {
@@ -186,7 +363,7 @@ function modalActions(label) {
 function openImport() {
   modal(
     "Импорт диалогов",
-    `<p class="body-6 cqa-muted">Укажите группу данных организаторов. Уже импортированные диалоги сохранят свои оценки.</p><label class="cqa-field"><span class="title-4">ID группы</span><input name="group" placeholder="Например, DEV" required autocomplete="off"></label>${modalActions("Импортировать")}`,
+    `<p class="body-6 cqa-muted">Укажите группу данных организаторов. Уже импортированные диалоги сохранят свои оценки.</p><label class="cqa-field"><span class="title-4">ID группы</span><input name="group" value="${e(state.group)}" placeholder="Например, DEV" required autocomplete="off"></label>${modalActions("Импортировать")}`,
     "import",
   );
 }
@@ -201,8 +378,10 @@ function openAppeal(id) {
 }
 async function openReview(id) {
   const appeal = state.appeals.find((a) => a.id === Number(id));
+  const token = routeToken;
   try {
     const evaluation = await api.evaluationById(appeal.evaluation_id);
+    if (token !== routeToken) return;
     if (appeal.status === "decided") {
       location.hash = `dialog/${encodeURIComponent(evaluation.conversation_id)}?evaluation=${evaluation.id}`;
       return;
@@ -211,6 +390,7 @@ async function openReview(id) {
       api.checklist(evaluation.checklist_version_id),
       api.conversation(evaluation.conversation_id),
     ]);
+    if (token !== routeToken) return;
     const criterion = checklist.criteria.find(
         (c) => c.id === appeal.criterion_id,
       ),
@@ -256,7 +436,9 @@ async function submitModal(form) {
   try {
     let message;
     if (context.kind === "import") {
-      const r = await api.importGroup(data.get("group").trim());
+      const group = data.get("group").trim();
+      const r = await api.importGroup(group);
+      if (state.group === group) state.datasetIds = await datasetIds(group);
       message = `Импортировано диалогов: ${r.imported}`;
     }
     if (context.kind === "appeal") {
@@ -409,6 +591,51 @@ function rememberJob(id) {
     else sessionStorage.removeItem("cqa-active-job");
   } catch {}
 }
+function updateAssessmentControls() {
+  const action = root.querySelector("[data-action=evaluate-one]");
+  if (!action || !state.detail) return;
+  action.disabled = Boolean(state.job) || !state.ai?.configured || !evaluationTextSource(state);
+  const label = assessmentAction(state);
+  if (action.textContent !== label) action.lastChild.textContent = label;
+  const basis = root.querySelector("#assessment-basis");
+  const content = assessmentBasis(state);
+  if (basis && basis.innerHTML !== content) basis.innerHTML = content;
+}
+function updateJob() {
+  const region = root.querySelector("#feed-job");
+  if (!region) return;
+  const progress = region.querySelector("progress");
+  if (progress && state.job) {
+    progress.max = state.job.total || 1;
+    progress.value = state.job.done;
+    region.querySelector(".caption-3").textContent = `${state.job.done} / ${state.job.total}`;
+  } else {
+    region.innerHTML = jobProgress(state.job);
+  }
+  updateAssessmentControls();
+  const batch = root.querySelector("[data-action=evaluate-all]");
+  if (batch) batch.disabled = Boolean(state.job) || !state.ai?.configured || !datasetRows(state).length;
+}
+async function refreshAfterJob() {
+  if (["checklist", "submission"].includes(state.route)) return summary();
+  if (!isWorkspace()) return loadPage({ refresh: true });
+  const token = routeToken;
+  const detail = state.detail;
+  const pinned = routeInfo().evaluationId;
+  await summary();
+  if (token !== routeToken) return;
+  updateFeed();
+  if (detail && !pinned) {
+    const evaluation = await api.evaluation(detail.conversation.conversation_id, detail.checklist.id)
+      .catch((error) => {
+        if (error.status === 404) return null;
+        throw error;
+      });
+    if (token !== routeToken) return;
+    state.detail = { ...detail, evaluation };
+    if (!state.drawer) root.querySelector(".cqa-audit").innerHTML = scorecard(state);
+  }
+}
 async function pollJob(id) {
   try {
     while (true) {
@@ -417,54 +644,50 @@ async function pollJob(id) {
       if (["done", "error"].includes(job.status)) {
         state.job = null;
         rememberJob(null);
-        if (["checklist", "submission"].includes(state.route)) await summary();
-        else await loadPage({ refresh: true });
+        updateJob();
+        await refreshAfterJob();
         toast(
           job.status === "done"
             ? `Оценка завершена. Обработано диалогов: ${job.done}`
-            : job.errors[0]?.error || "Часть диалогов не удалось оценить",
+            : job.errors?.[0]?.error || "Часть диалогов не удалось оценить",
           job.status === "done" ? "success" : "error",
         );
         return;
       }
-      if (state.route === "dialogs" && !root.querySelector("dialog[open]")) {
-        const progress = root.querySelector(".cqa-job progress");
-        if (progress) {
-          progress.max = job.total || 1;
-          progress.value = job.done;
-          root.querySelector(".cqa-job .caption-3").textContent =
-            `${job.done} / ${job.total}`;
-        } else render();
-      }
+      updateJob();
       await new Promise((r) => setTimeout(r, 750));
     }
   } catch (error) {
     state.job = null;
     if (error.status === 404) rememberJob(null);
-    await loadPage({ refresh: true });
+    updateJob();
     toast(error.message, "error");
   }
 }
 async function evaluate(one = false) {
-  if (state.job) return;
-  const ids = one ? [state.detail.conversation.conversation_id] : "all";
+  if (state.job || !state.ai?.configured || (one && !state.detail)) return;
+  const source = one ? evaluationTextSource(state) : "original";
+  if (!source) return;
+  const ids = one ? [state.detail.conversation.conversation_id] : datasetRows(state).map((c) => c.conversation_id);
+  if (!ids.length) return;
   const version = one ? state.detail.checklist.id : state.version;
-  if (one)
-    history.replaceState(
-      null,
-      "",
-      `#dialog/${encodeURIComponent(state.detail.conversation.conversation_id)}?version=${version}`,
-    );
-  state.job = { done: 0, total: one ? 1 : state.conversations.length };
-  render();
+  const token = routeToken;
+  state.job = { done: 0, total: ids.length };
+  updateJob();
   try {
-    const { job_id } = await api.evaluate(ids, version);
+    const { job_id } = await api.evaluate(ids, version, source);
+    if (one && token === routeToken) {
+      history.replaceState(null, "", `#dialog/${encodeURIComponent(ids[0])}?version=${encodeURIComponent(version)}`);
+      state.route = "dialog";
+    }
     rememberJob(job_id);
     await pollJob(job_id);
   } catch (error) {
     state.job = null;
-    render();
-    toast(error.message, "error");
+    const stale = error.status === 409 && source === "gemini";
+    if (stale && token === routeToken) state.transcriptionStale = true;
+    updateJob();
+    toast(stale ? "Расшифровка Gemini отсутствует или устарела. Обновите диалог." : error.message, "error");
   }
 }
 function highlightEvidence(from, to = from) {
@@ -487,17 +710,42 @@ function highlightEvidence(from, to = from) {
   });
   target?.focus({ preventScroll: true });
   const audio = root.querySelector("#conversation-audio");
-  if (audio) {
-    const seek = () => {
-      audio.currentTime = messages[start].offset_sec;
-    };
-    if (audio.readyState) seek();
-    else audio.addEventListener("loadedmetadata", seek, { once: true });
+  const offset = messages[start].offset_sec;
+  if (audio && Number.isFinite(offset) && offset >= 0) {
+    if (audio.readyState) audio.currentTime = offset;
+    else audio.onloadedmetadata = () => { audio.currentTime = offset; };
   }
 }
 root.addEventListener("click", (event) => {
   const target = event.target.closest("button,a,tr");
   if (!target || target.disabled) return;
+  if (target.dataset.filter) {
+    state.filter = target.dataset.filter;
+    root.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", String(b === target)));
+    updateFeed();
+    return;
+  }
+  if (target.dataset.adjacent) {
+    const rows = feedRows(state);
+    const index = rows.findIndex((c) => c.conversation_id === state.selected);
+    const next = rows[index + Number(target.dataset.adjacent)];
+    if (next) navigate(next.conversation_id);
+    return;
+  }
+  if (target.dataset.role) {
+    if (state.role === target.dataset.role) return;
+    state.role = target.dataset.role;
+    root.querySelectorAll("[data-role]").forEach((b) => b.setAttribute("aria-pressed", String(b === target)));
+    const score = root.querySelector(".cqa-audit");
+    if (!state.drawer && score && state.detail && !state.error)
+      score.innerHTML = scorecard(state);
+    return;
+  }
+  if (target.dataset.transcript) {
+    state.textMode = target.dataset.transcript;
+    updateTranscript(true);
+    return;
+  }
   if (target.dataset.editor) {
     editChecklist(target, state.checklist.sections);
     return;
@@ -545,9 +793,22 @@ root.addEventListener("click", (event) => {
     case "refresh":
       loadPage({ refresh: true });
       break;
+    case "checklist-drawer":
+      toggleDrawer(target);
+      break;
+    case "transcribe":
+      if (!state.ai?.transcription_configured || !state.detail ||
+          ["loading", "running", "done"].includes(state.transcription?.status)) break;
+      state.transcription = { status: "running" };
+      updateTranscript();
+      readTranscription(state.detail.conversation.conversation_id, routeToken, true);
+      break;
     case "reset-filters":
-      state.search = state.channel = state.status = "";
-      render();
+      state.search = "";
+      state.filter = "all";
+      root.querySelector("#dialog-search").value = "";
+      root.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filter === "all")));
+      updateFeed();
       break;
     case "download-submission":
       downloadSubmission(target);
@@ -564,18 +825,16 @@ root.addEventListener("input", (event) => {
   if (event.target.name === "group_id") updateSubmissionForm(event.target);
   if (event.target.id === "dialog-search") {
     state.search = event.target.value;
-    root.querySelector("#dialog-table").innerHTML = dialogTable(state);
+    updateFeed();
   }
 });
 root.addEventListener("change", async (event) => {
   const target = event.target;
-  if (["channel-filter", "status-filter"].includes(target.id)) {
-    state[target.id === "channel-filter" ? "channel" : "status"] = target.value;
-    root.querySelector("#dialog-table").innerHTML = dialogTable(state);
-  }
-  if (target.id === "version-select") {
+  if (target.id === "audio-speed") root.querySelector("#conversation-audio").playbackRate = Number(target.value);
+  if (target.id === "version-select" || target.id === "drawer-version") {
     state.version = Number(target.value);
-    if (state.route === "checklist") await loadPage();
+    if (state.route === "checklist" || target.id === "drawer-version") await loadPage();
+    else if (state.detail) location.hash = `dialog/${encodeURIComponent(state.selected)}?version=${encodeURIComponent(state.version)}`;
   }
   if (target.id === "detail-version")
     location.hash = `dialog/${encodeURIComponent(state.detail.conversation.conversation_id)}?version=${encodeURIComponent(target.value)}`;
@@ -584,7 +843,17 @@ root.addEventListener("change", async (event) => {
   if (target.tagName === "SELECT") updateSubmissionForm(target);
   updateCriterionControls(target);
 });
+root.addEventListener("error", (event) => {
+  if (event.target.id === "conversation-audio") {
+    const error = root.querySelector("#audio-error");
+    if (error) error.hidden = false;
+  }
+}, true);
 root.addEventListener("submit", (event) => {
+  if (event.target.id === "dataset-form") {
+    event.preventDefault();
+    openDataset(event.target);
+  }
   if (event.target.id === "submission-form") {
     event.preventDefault();
     previewSubmission(event.target);
@@ -617,8 +886,7 @@ window.addEventListener("keydown", (event) => {
 async function main() {
   render();
   try {
-    await summary();
-    await loadPage();
+    await loadPage({ refresh: true });
     let job;
     try {
       job = sessionStorage.getItem("cqa-active-job");
