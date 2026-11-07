@@ -26,6 +26,8 @@ async function scenario(id, mutate, check, options = {}) {
   const previousFetch = globalThis.fetch;
   const keys = [
     "GEMINI_API_KEY",
+    "GEMINI_API_KEYS",
+    "GEMINI_API_Keys",
     "AI_CACHE_DIR",
     "LLM_PROVIDER",
     "CQA_FAKE_LLM",
@@ -35,6 +37,7 @@ async function scenario(id, mutate, check, options = {}) {
   ];
   const env = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
   process.env.GEMINI_API_KEY = "stub";
+  process.env.GEMINI_API_KEYS = "stub";
   process.env.LLM_PROVIDER = "gemini";
   process.env.CQA_FAKE_LLM = "0";
   process.env.GEMINI_MAX_ATTEMPTS = "2";
