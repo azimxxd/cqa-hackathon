@@ -2,7 +2,7 @@
 // transcript with message ids, timing facts from timing.js, dialogue text treated as data.
 import { computeTiming, offsetOf } from './timing.js';
 
-export const PROMPT_VERSION = 'v4';
+export const PROMPT_VERSION = 'v7';
 
 const SYSTEM = `Ты — эксперт службы контроля качества (QA) брокерской компании Freedom Broker.
 Ты оцениваешь работу ОПЕРАТОРА в диалоге с клиентом по чек-листу. Отвечай строго по формулировкам критериев.

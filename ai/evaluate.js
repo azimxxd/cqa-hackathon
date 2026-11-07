@@ -134,9 +134,11 @@ export async function evaluateConversation(conversation, criteria, checklistMeta
     for (const c of todo) {
       if (!results.has(c.id)) {
         const r = raws.get(c.id) || { criterion_id: c.id, answer: null, scale_value: null, explanation: '', evidence_ids: [], checked_range: null };
-        results.set(c.id, { ...sanitize(r, c, conv), needs_review: true });
+        results.set(c.id, sanitize(r, c, conv));
       } else {
-        cacheSet(cacheKey(conv, c, model), results.get(c.id));
+        const clean = sanitize(results.get(c.id), c, conv);
+        results.set(c.id, clean);
+        cacheSet(cacheKey(conv, c, model), clean);
       }
     }
   }

@@ -56,8 +56,8 @@ test('validate + sanitize: catches bad ids, scale values, N/A and missing checke
   assert.ok(errs.some((e) => e.includes('m999')));
   const fixed = sanitize(rBad, c01, mockConv);
   assert.equal(fixed.answer, 'no');
-  assert.deepEqual(fixed.evidence_ids, []);
-  assert.ok(fixed.checked_range);
+  assert.deepEqual(fixed.evidence_ids, ['m004']);
+  assert.deepEqual(fixed.checked_range, { from: 'm004', to: 'm004' });
 
   const rScale = sanitize(normalize({ criterion_id: 'c04', scale_value: 13, evidence_ids: ['4'] }, c04, mockConv), c04, mockConv);
   assert.equal(rScale.scale_value, 15);
