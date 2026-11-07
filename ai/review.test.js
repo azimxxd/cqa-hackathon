@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { evaluateConversation, toConversation } from "./evaluate.js";
@@ -12,6 +12,14 @@ const checklist = load("checklist.default.json"),
 const blockedFetch = async () => {
   throw Error("Unstubbed network blocked by review test");
 };
+const previousFetch = globalThis.fetch;
+const previousCache = process.env.AI_CACHE_DIR;
+delete process.env.AI_CACHE_DIR;
+after(() => {
+  globalThis.fetch = previousFetch;
+  if (previousCache === undefined) delete process.env.AI_CACHE_DIR;
+  else process.env.AI_CACHE_DIR = previousCache;
+});
 globalThis.fetch = blockedFetch;
 const response = (results) => ({
   model: "stub",

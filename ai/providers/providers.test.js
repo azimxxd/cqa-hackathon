@@ -10,6 +10,7 @@ const load = (n) =>
 async function stub(fn) {
   const previous = fetch,
     env = { ...process.env };
+  delete process.env.AI_CACHE_DIR;
   process.env.GEMINI_API_KEY = "stub";
   delete process.env.GEMINI_API_KEYS;
   delete process.env.GEMINI_API_Keys;

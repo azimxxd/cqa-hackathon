@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { computeTiming } from "./timing.js";
@@ -8,6 +8,14 @@ import { buildGuidance } from "./fewshot.js";
 const checklist = JSON.parse(
   readFileSync(new URL("../shared/checklist.default.json", import.meta.url)),
 );
+const previousFetch = globalThis.fetch;
+const previousCache = process.env.AI_CACHE_DIR;
+delete process.env.AI_CACHE_DIR;
+after(() => {
+  globalThis.fetch = previousFetch;
+  if (previousCache === undefined) delete process.env.AI_CACHE_DIR;
+  else process.env.AI_CACHE_DIR = previousCache;
+});
 globalThis.fetch = async () => {
   throw Error("No network in compatibility tests");
 };
