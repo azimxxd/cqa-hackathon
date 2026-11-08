@@ -3,7 +3,7 @@
 import { computeTiming, offsetOf, resolveT0 } from "./timing.js";
 import { buildGuidance } from "./fewshot.js";
 
-export const PROMPT_VERSION = "v18";
+export const PROMPT_VERSION = "v23";
 
 const SYSTEM = `Ты — строгий эксперт службы контроля качества (QA) брокерской компании Freedom Broker.
 Ты оцениваешь работу ОПЕРАТОРА (speaker=operator) в диалоге с клиентом по чек-листу из блока <criteria>.
@@ -89,7 +89,7 @@ export function buildPrompt(
   const threshold = checklistMeta?.first_reaction_threshold_sec ?? 180;
   const timing = computeTiming(conversation, threshold);
   const parts = [];
-  const guidance = extra.fewShot ? buildGuidance(criteria) : null;
+  const guidance = extra.fewShot ? buildGuidance(criteria, { focused: extra.focused }) : null;
   if (guidance) parts.push(`<examples>\n${guidance}\n</examples>`);
   parts.push(
     `<criteria>\n${criteria.map(renderCriterion).join("\n\n")}\n</criteria>`,

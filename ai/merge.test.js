@@ -159,3 +159,43 @@ test("merge: Ollama nullable schema supports unions without nested or duplicate 
     type: ["number", "null"],
   });
 });
+
+test("Qwen rechecks official clarity and closing while preserving the initial batch and jury rules", async () => {
+  const selected = checklist.criteria.filter(c => ["c01", "c06", "c07"].includes(c.id));
+  const run = async criteria => {
+    const requests = [];
+    const output = await evaluateConversation(
+      conversation,
+      criteria,
+      { ...checklist, model: "ollama/qwen3.6:35b-a3b" },
+      {
+        noCache: true,
+        samples: 1,
+        provider: {
+          async generate({ schema }) {
+            const ids = schema.properties.results.items.properties.criterion_id.enum;
+            requests.push(ids);
+            return {
+              text: JSON.stringify({
+                results: ids.map(id => ({
+                  criterion_id: id,
+                  answer: id === "c06" ? null : "yes",
+                  scale_value: id === "c06" ? (ids.length === 1 ? 7 : 10) : null,
+                  explanation: "Тестовое основание.",
+                  evidence_ids: id === "clarification_check" ? ["m004", "m006"] : ["m004"],
+                })),
+              }),
+            };
+          },
+        },
+      },
+    );
+    assert.deepEqual(output.results.map(c => c.criterion_id), ["c01", "c06", "c07"]);
+    assert.equal(output.results[1].scale_value, 4);
+    assert.deepEqual(output.results[1].checked_range, { from: "m004", to: "m006" });
+    return requests;
+  };
+  assert.deepEqual(await run(selected), [["c01", "c06", "c07"], ["c06"], ["clarification_check"], ["c07"]]);
+  const custom = selected.map(c => c.id === "c07" ? { ...c, description: "Правило жюри" } : c);
+  assert.deepEqual(await run(custom), [["c01", "c06", "c07"], ["c06"], ["clarification_check"]]);
+});

@@ -59,11 +59,6 @@ export const FEW_SHOT = [
   ...Object.values(RULES_BY_ID),
 ].join("\n\n");
 
-/**
- * Builds guidance tailored to the criteria being evaluated. If a criterion in <criteria> was
- * customized/replaced via UI (different type or modified scale), reminds the model to strictly
- * follow the custom definition and scale in <criteria>.
- */
 const defaults = JSON.parse(
   readFileSync(
     new URL("../shared/checklist.default.json", import.meta.url),
@@ -81,14 +76,38 @@ const definition = (c) =>
     Boolean(c.gross_error),
   ]);
 
-export function buildGuidance(criteria = []) {
+const FOCUSED_RULES = {
+  c06: `• Управление диалогом, скорость и грамотность (c06):
+  – Просмотри весь диалог. Найди, пришлось ли клиенту повторить прежний вопрос или просить уточнить ответ именно из-за неясной формулировки либо нарушенного порядка. Сверь предыдущий ответ и последующий вопрос по ID и ролям.
+  – 4: клиенту пришлось переспрашивать из-за формулировок или порядка. Если оператор позже объяснил понятно и клиент решил вопрос, это влияет на полноту консультации c04, но не отменяет уже случившееся переспрашивание для c06.
+  – Новый самостоятельный вопрос и ответ на уточнение оператора не являются переспрашиванием. Пропущенный вопрос сам по себе влияет на полноту консультации c04. Для c06 оцени, повлиял ли порядок ответов на понимание.
+  – 10: ответы ясные и связные; при явном ожидании оператор предупредил. 7: был заметный сбой, например ожидание без предупреждения, но клиент понял ответ и мог продолжить. 0: из-за бессвязных или противоречивых реплик ход разговора непонятен.
+  – Порог первой реакции, теги и вложения не влияют на балл. При оценке 4 укажи ID неясного ответа и связанного с ним переспрашивания.`,
+
+  c07: `• Завершение (c07):
+  – Проверь два признака в финале: (1) оператор попрощался; (2) оператор подвёл итог ИЛИ предложил дальнейшую помощь. Если оба признака есть, ставь «да» и сошлись на соответствующих репликах. Они могут быть в одной реплике или в соседних.
+  – Явное приглашение снова написать или обратиться при дополнительных вопросах считается предложением помощи. Наличие нерешённого вопроса не отменяет явные признаки завершения: полнота ответа оценивается в c04.
+  – «Нет»: у оператора была возможность завершить разговор, но хотя бы один из двух признаков отсутствует. Одного прощания или одной благодарности недостаточно. Укажи проверенный участок от последней реплики оператора до конца.
+  – N/A: клиент или система оборвали разговор до того, как оператор мог его завершить. Само событие закрытия этого не доказывает.`,
+};
+
+export function isDefaultCriterion(criterion) {
+  const original = defaults.find(({ id }) => id === criterion.id);
+  return Boolean(original && definition(criterion) === definition(original));
+}
+
+/**
+ * Builds guidance tailored to the criteria being evaluated. If a criterion in <criteria> was
+ * customized/replaced via UI (different type or modified scale), reminds the model to strictly
+ * follow the custom definition and scale in <criteria>.
+ */
+export function buildGuidance(criteria = [], { focused = false } = {}) {
   const blocks = [
     "Методические правила оценки (приоритет ВСЕГДА у точной формулировки и шкалы из блока <criteria>):",
   ];
   for (const c of criteria) {
-    const base = RULES_BY_ID[c.id];
-    const original = defaults.find((value) => value.id === c.id);
-    if (!base || !original || definition(c) !== definition(original)) {
+    const base = (focused && FOCUSED_RULES[c.id]) || RULES_BY_ID[c.id];
+    if (!base || !isDefaultCriterion(c)) {
       const values =
         c.type === "scale"
           ? ` Допустимые значения: ${(c.scale || []).map((s) => s.value).join(", ")}.`

@@ -53,13 +53,13 @@ export function createJobService(db, options = {}) {
   const currentModel = () => pinned ?? modelName();
   const promptVersion =
     options.promptVersion ?? (fake ? "fake" : PROMPT_VERSION);
-  const promptKey = (checklist) =>
-    `${promptVersion}|frt=${checklist.first_reaction_threshold_sec ?? 180}`;
+  const promptKey = (checklist, revision = promptVersion) =>
+    `${revision}|frt=${checklist.first_reaction_threshold_sec ?? 180}`;
   // Timing threshold affects c06 only; unrelated criteria remain reusable.
-  const cacheKey = (checklist, criterion, item) => {
+  const cacheKey = (checklist, criterion, item, revision = promptVersion) => {
     const base = criterion.id === "c06"
-      ? promptKey(checklist)
-      : `${promptVersion}|frt=independent`;
+      ? promptKey(checklist, revision)
+      : `${revision}|frt=independent`;
     const configured = `${base}|config=${configId}`;
     return item.transcript_source === "gemini"
       ? `${configured}|transcript_source=gemini|transcript_hash=${item.transcript_hash}`
@@ -153,15 +153,22 @@ export function createJobService(db, options = {}) {
     const results = new Map(),
       missing = [];
     for (const c of checklist.criteria) {
+      const key = cacheKey(checklist, c, item);
+      // v23 leaves the initial Qwen rubric pass intact. Reuse v18 originals only
+      // for unaffected criteria, with the same model, text and settings.
+      const canReuseV18 = promptVersion === "v23" && model.startsWith("ollama/qwen") &&
+        c.id !== "c06" && c.id !== "c07";
+      const previousKey = canReuseV18 ? cacheKey(checklist, c, item, "v18") : key;
       const cached = db
         .prepare(
           `SELECT cr.original FROM criterion_results cr JOIN evaluations e ON e.id=cr.evaluation_id
-    WHERE e.conversation_id=? AND e.status='done' AND cr.criterion_hash=? AND cr.prompt_version=? AND cr.model=? ORDER BY e.id DESC LIMIT 1`,
+    WHERE e.conversation_id=? AND e.status='done' AND cr.criterion_hash=? AND cr.prompt_version IN (?, ?) AND cr.model=? ORDER BY e.id DESC LIMIT 1`,
         )
         .get(
           conversation.conversation_id,
           c.hash,
-          cacheKey(checklist, c, item),
+          key,
+          previousKey,
           model,
         );
       if (cached) {

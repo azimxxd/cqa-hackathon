@@ -14,7 +14,7 @@ import {
 import path from "node:path";
 import { buildPrompt, responseSchema, PROMPT_VERSION } from "./prompt.js";
 import { normalize, validateResult, quoteFlags } from "./validate.js";
-import { FEW_SHOT } from "./fewshot.js";
+import { FEW_SHOT, isDefaultCriterion } from "./fewshot.js";
 import { parseTimestampSec, offsetOf } from "./timing.js";
 import { activeProvider, ollamaModel } from "./router.js";
 
@@ -173,7 +173,7 @@ export function aggregate(criterion, samples) {
   };
 }
 
-async function runModel(conv, criteria, checklistMeta, provider, model, appendCalls, sampling) {
+async function runModel(conv, criteria, checklistMeta, provider, model, appendCalls, sampling, focused = false) {
   const results = new Map();
   let pending = criteria,
     feedback = null,
@@ -181,6 +181,7 @@ async function runModel(conv, criteria, checklistMeta, provider, model, appendCa
   for (let attempt = 0; attempt < 2 && pending.length; attempt++) {
     const { system, user } = buildPrompt(conv, pending, checklistMeta, {
       fewShot: FEW_SHOT,
+      focused,
       feedback,
     });
     let resp;
@@ -226,6 +227,54 @@ async function runModel(conv, criteria, checklistMeta, provider, model, appendCa
       partial: [...results.values()],
     });
   return results;
+}
+
+const CLARIFICATION_CHECK = {
+  id: "clarification_check",
+  title: "Переспрашивание из-за ответа оператора",
+  type: "binary",
+  na_allowed: false,
+  description: "Да — клиент после непонятного, расплывчатого или не по порядку данного ответа оператора был вынужден повторить прежний вопрос или попросить уточнить сам ответ. Позднейшее исправление ответа не меняет факт переспрашивания. Для «да» укажи ровно две реплики: предыдущий неясный ответ оператора и последовавшее переспрашивание клиента. Нет — клиент задал новый вопрос, ответил на уточнение оператора или не просил прояснить его ответ.",
+};
+
+async function recheckCriterion(conv, criterion, checklistMeta, provider, model, appendCalls, sampling) {
+  const rows = await runModel(conv, [criterion], checklistMeta, provider, model, appendCalls, sampling, true);
+  const result = rows.get(criterion.id);
+  if (criterion.id !== "c06" || ![7, 10].includes(result.scale_value)) return result;
+
+  // The official 4/10 step follows from a specific observed pair of turns.
+  // Let the model identify the pair, then apply the rubric independently of the final outcome.
+  const checked = await runModel(conv, [CLARIFICATION_CHECK], checklistMeta, provider, model, appendCalls, sampling);
+  const fact = checked.get(CLARIFICATION_CHECK.id);
+  if (fact.answer !== "yes" || fact.evidence_ids.length !== 2) return result;
+  const pair = conv.messages.filter(message => fact.evidence_ids.includes(message.id));
+  if (pair[0]?.speaker !== "operator" || pair[1]?.speaker !== "client") return result;
+  return {
+    ...result,
+    scale_value: 4,
+    explanation: fact.explanation,
+    evidence_ids: pair.map(message => message.id),
+    checked_range: { from: pair[0].id, to: pair[1].id },
+  };
+}
+
+// Keep the existing rubric pass. Qwen then rechecks official clarity and closing
+// individually so a solved problem cannot erase a clarification or decide closure.
+async function runSample(conv, criteria, checklistMeta, provider, model, appendCalls, sampling) {
+  const rechecks = model.startsWith("ollama/qwen")
+    ? criteria.filter(c => ["c06", "c07"].includes(c.id) && isDefaultCriterion(c))
+    : [];
+  if (criteria.length === 1 && rechecks.length)
+    return new Map([[criteria[0].id, await recheckCriterion(conv, criteria[0], checklistMeta, provider, model, appendCalls, sampling)]]);
+
+  const initial = rechecks.length === criteria.length
+    ? new Map()
+    : await runModel(conv, criteria, checklistMeta, provider, model, appendCalls, sampling);
+  for (const criterion of rechecks) {
+    const result = await recheckCriterion(conv, criterion, checklistMeta, provider, model, appendCalls, sampling);
+    initial.set(criterion.id, result);
+  }
+  return initial;
 }
 
 /**
@@ -279,7 +328,7 @@ export async function evaluateConversation(
       const runs = [];
       for (let i = 0; i < samples; i++)
         runs.push(
-          runModel(conv, todo, checklistMeta, provider, model, appendCalls, { config, temperature: i === 0 ? 0 : config.sampleTemperature, seed: 7 + i }),
+          runSample(conv, todo, checklistMeta, provider, model, appendCalls, { config, temperature: i === 0 ? 0 : config.sampleTemperature, seed: 7 + i }),
         );
       const settled = await Promise.allSettled(runs);
       const ok = settled.filter((s) => s.status === "fulfilled").map((s) => s.value);
