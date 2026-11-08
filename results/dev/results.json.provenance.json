@@ -1,9 +1,9 @@
 {
-  "created_at": "2026-11-07T19:47:56.213Z",
+  "created_at": "2026-11-08T04:37:23.895Z",
   "dataset": "DEV",
   "group_id": "DEV",
   "model": "ollama/qwen3.6:35b-a3b",
-  "prompt_version": "v16",
+  "prompt_version": "v18",
   "config_id": "dd44888cd12e5fb7796bbf16a814ce4bab5bb50aa2b0039e86cf61ddf4348c0d",
   "evaluation_config": {
     "revision": 1,
@@ -14,464 +14,464 @@
     "geminiThinkingBudget": null
   },
   "checklist_version_id": 1,
-  "source": "final",
-  "result_sha256": "cf2a697e8291aadc1afaad6e431edfe9d2f2c26aa8bcd499c359d3b4864efe57",
+  "source": "original",
+  "result_sha256": "5e53b5bdafc8a6a1821dde24e5f481d8e5f341bb8e623776ba4758aa9dd5015b",
   "input_sha256": "7311f19010932804b1fd3391d50a311dd8699a04e8441e756ae94a8b51c0b455",
   "evaluations": [
     {
       "conversation_id": "p1-ru-001",
-      "evaluation_id": 66,
+      "evaluation_id": 1,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.958Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-002",
-      "evaluation_id": 67,
+      "evaluation_id": 2,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.958Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-003",
-      "evaluation_id": 68,
+      "evaluation_id": 3,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.958Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-004",
-      "evaluation_id": 69,
+      "evaluation_id": 4,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-005",
-      "evaluation_id": 70,
+      "evaluation_id": 5,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-006",
-      "evaluation_id": 71,
+      "evaluation_id": 6,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-007",
-      "evaluation_id": 72,
+      "evaluation_id": 7,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-008",
-      "evaluation_id": 73,
+      "evaluation_id": 8,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-009",
-      "evaluation_id": 74,
+      "evaluation_id": 9,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-010",
-      "evaluation_id": 75,
+      "evaluation_id": 10,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-011",
-      "evaluation_id": 76,
+      "evaluation_id": 11,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-012",
-      "evaluation_id": 77,
+      "evaluation_id": 12,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-013",
-      "evaluation_id": 78,
+      "evaluation_id": 13,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-014",
-      "evaluation_id": 79,
+      "evaluation_id": 14,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-015",
-      "evaluation_id": 80,
+      "evaluation_id": 15,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-016",
-      "evaluation_id": 81,
+      "evaluation_id": 16,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-017",
-      "evaluation_id": 82,
+      "evaluation_id": 17,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-018",
-      "evaluation_id": 83,
+      "evaluation_id": 18,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-019",
-      "evaluation_id": 84,
+      "evaluation_id": 19,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-020",
-      "evaluation_id": 85,
+      "evaluation_id": 20,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-021",
-      "evaluation_id": 86,
+      "evaluation_id": 21,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-022",
-      "evaluation_id": 87,
+      "evaluation_id": 22,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-023",
-      "evaluation_id": 88,
+      "evaluation_id": 23,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-024",
-      "evaluation_id": 89,
+      "evaluation_id": 24,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-025",
-      "evaluation_id": 90,
+      "evaluation_id": 25,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-026",
-      "evaluation_id": 91,
+      "evaluation_id": 26,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-027",
-      "evaluation_id": 92,
+      "evaluation_id": 27,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-028",
-      "evaluation_id": 93,
+      "evaluation_id": 28,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-029",
-      "evaluation_id": 94,
+      "evaluation_id": 29,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-ru-030",
-      "evaluation_id": 95,
+      "evaluation_id": 30,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-001",
-      "evaluation_id": 96,
+      "evaluation_id": 31,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-002",
-      "evaluation_id": 97,
+      "evaluation_id": 32,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-003",
-      "evaluation_id": 98,
+      "evaluation_id": 33,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-004",
-      "evaluation_id": 99,
+      "evaluation_id": 34,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-005",
-      "evaluation_id": 100,
+      "evaluation_id": 35,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-006",
-      "evaluation_id": 101,
+      "evaluation_id": 36,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-007",
-      "evaluation_id": 102,
+      "evaluation_id": 37,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-008",
-      "evaluation_id": 103,
+      "evaluation_id": 38,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-009",
-      "evaluation_id": 104,
+      "evaluation_id": 39,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-010",
-      "evaluation_id": 105,
+      "evaluation_id": 40,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-011",
-      "evaluation_id": 106,
+      "evaluation_id": 41,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-012",
-      "evaluation_id": 107,
+      "evaluation_id": 42,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-013",
-      "evaluation_id": 108,
+      "evaluation_id": 43,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-014",
-      "evaluation_id": 109,
+      "evaluation_id": 44,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-kz-015",
-      "evaluation_id": 110,
+      "evaluation_id": 45,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-001",
-      "evaluation_id": 111,
+      "evaluation_id": 46,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-002",
-      "evaluation_id": 112,
+      "evaluation_id": 47,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-003",
-      "evaluation_id": 113,
+      "evaluation_id": 48,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-004",
-      "evaluation_id": 114,
+      "evaluation_id": 49,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-005",
-      "evaluation_id": 115,
+      "evaluation_id": 50,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-006",
-      "evaluation_id": 116,
+      "evaluation_id": 51,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-007",
-      "evaluation_id": 117,
+      "evaluation_id": 52,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-008",
-      "evaluation_id": 118,
+      "evaluation_id": 53,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-009",
-      "evaluation_id": 119,
+      "evaluation_id": 54,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-010",
-      "evaluation_id": 120,
+      "evaluation_id": 55,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-011",
-      "evaluation_id": 121,
+      "evaluation_id": 56,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-012",
-      "evaluation_id": 122,
+      "evaluation_id": 57,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-013",
-      "evaluation_id": 123,
+      "evaluation_id": 58,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-014",
-      "evaluation_id": 124,
+      "evaluation_id": 59,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p1-en-015",
-      "evaluation_id": 125,
+      "evaluation_id": 60,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p4-ru-003",
-      "evaluation_id": 126,
+      "evaluation_id": 61,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p4-ru-002",
-      "evaluation_id": 127,
+      "evaluation_id": 62,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p4-ru-001",
-      "evaluation_id": 128,
+      "evaluation_id": 63,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p4-ru-005",
-      "evaluation_id": 129,
+      "evaluation_id": 64,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     },
     {
       "conversation_id": "p4-ru-004",
-      "evaluation_id": 130,
+      "evaluation_id": 65,
       "status": "done",
       "model": "ollama/qwen3.6:35b-a3b",
-      "created_at": "2026-11-07T19:41:25.959Z"
+      "created_at": "2026-11-08T04:31:29.672Z"
     }
   ]
 }

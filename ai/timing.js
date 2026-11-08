@@ -143,7 +143,7 @@ export function computeTiming(conversation, thresholdSec = 180) {
     lines.push(
       `• Первая реплика оператора: ${firstOp.id} (через ${fmt(facts.first_reaction_sec)} после ${from.id} — ` +
         (facts.exceeded
-          ? `ПРЕВЫШЕН порог первой реакции ${thresholdSec} с!).`
+          ? `справочное время выше ${thresholdSec} с).`
           : `в пределах порога ${thresholdSec} с).`),
     );
   } else {

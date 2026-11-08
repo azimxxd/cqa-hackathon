@@ -15,7 +15,10 @@
     "submission:export": "node --env-file-if-exists=.env scripts/export-results.js",
     "submission:validate": "node scripts/validate-results.js",
     "assessment:import": "node scripts/import-algos-assessment.js",
-    "prod": "node --env-file-if-exists=.env scripts/prod-run.js"
+    "prod": "node --env-file-if-exists=.env scripts/prod-run.js",
+    "preflight": "node --env-file-if-exists=.env scripts/preflight.js",
+    "rehearsal": "node --env-file-if-exists=.env scripts/rehearse-control.js",
+    "gpu:connect": "node --env-file-if-exists=.env scripts/connect-gpu.js"
   },
   "dependencies": {
     "express": "^4.21.2"

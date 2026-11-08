@@ -30,3 +30,37 @@ test("a jury-replaced criterion is persisted as a new version and actually evalu
       explanation: "Тестовый ответ по новому критерию с опорой на m004.", evidence_ids: ["m004"], checked_range: null }
       : mock.criteria.find(r => r.criterion_id === c.id).original), calls: [],
   }) } }));
+
+test("adding a ninth jury criterion keeps the eight originals and evaluates only the new rule", () => {
+  const requested = [];
+  return fixture(async request => {
+    async function evaluateVersion(version) {
+      const queued = await request('/evaluate', { conversation_ids: 'all', checklist_version_id: version });
+      for (let i = 0; i < 100; i++) {
+        const job = (await request(`/jobs/${queued.body.job_id}`)).body;
+        if (job.status === 'done') return;
+        assert.notEqual(job.status, 'error', JSON.stringify(job));
+        await new Promise(resolve => setTimeout(resolve, 5));
+      }
+      assert.fail('Evaluation did not finish');
+    }
+    await evaluateVersion(1);
+    const official = (await request('/checklists/1')).body;
+    const added = { ...official.criteria[0], id: 'jury-followup', title: 'Срок следующего ответа',
+      description: 'Оператор назвал срок следующего ответа после передачи обращения.' };
+    const saved = await request('/checklists', { ...official, criteria: [...official.criteria, added] });
+    assert.equal(saved.status, 201);
+    await evaluateVersion(saved.body.id);
+    assert.deepEqual(requested.at(-1), ['jury-followup']);
+    const result = (await request(`/evaluations?checklist_version_id=${saved.body.id}`)).body;
+    assert.equal(result.criteria.length, 9);
+    assert.equal(result.criteria.find(c => c.criterion_id === 'jury-followup').final.answer, 'yes');
+    assert.equal((await request('/checklists/1')).body.criteria.length, 8);
+  }, { jobs: { model: 'test', evaluate: async (_conversation, criteria) => {
+    requested.push(criteria.map(c => c.id));
+    return { results: criteria.map(c => c.id === 'jury-followup'
+      ? { criterion_id: c.id, answer: 'yes', scale_value: null,
+        explanation: 'Тестовый ответ по новому правилу.', evidence_ids: ['m004'], checked_range: null }
+      : mock.criteria.find(r => r.criterion_id === c.id).original), calls: [] };
+  } } });
+});

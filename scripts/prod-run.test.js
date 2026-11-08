@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { openDatabase, getChecklist, saveChecklist } from '../server/db.js';
 
 test('control command reevaluates changed settings, exports provenance and protects existing output on stale --none', t=>{
  const dir=mkdtempSync(join(tmpdir(),'cqa-control-')); t.after(()=>rmSync(dir,{recursive:true,force:true}));
@@ -32,4 +33,26 @@ test('control command reevaluates changed settings, exports provenance and prote
  const p3=JSON.parse(readFileSync(out+'.provenance.json'));assert.notEqual(p1.config_id,p3.config_id);
  assert.ok(p3.evaluations.every((e,i)=>e.evaluation_id>p1.evaluations[i].evaluation_id));
  assert.equal(p3.result_sha256,createHash('sha256').update(readFileSync(out)).digest('hex'));
+
+ // An edited latest checklist must not waste model calls or poison the official run.
+ const db=openDatabase(join(dir,'cqa.db'));
+ const official=getChecklist(db,1);
+ const custom=saveChecklist(db,{...official,criteria:[...official.criteria,
+  {...official.criteria[0],id:'jury-added',title:'Правило, добавленное жюри'}]});
+ db.close();
+ const afterJury=run(3);assert.equal(afterJury.status,0,afterJury.stderr+afterJury.stdout);
+ assert.equal(JSON.parse(readFileSync(out+'.provenance.json')).checklist_version_id,1);
+ const rejected=run(3,['--checklist_version_id='+custom.id]);
+ assert.equal(rejected.status,1);assert.match(rejected.stderr,/not compatible/);
+ assert.doesNotMatch(rejected.stdout,/\[import\]/);
+
+ // Entirely new IDs and changed text enter through a supplied JSON file, not the API.
+ const fresh=records.map((r,i)=>({...r,conversation_id:`unseen-${i}`,
+  messages:r.messages.map(m=>({...m,text:`Новый контрольный текст ${i}. ${m.text}`}))}));
+ const input=join(dir,'incoming.json');writeFileSync(input,JSON.stringify(fresh));
+ const offline=run(3,['--group_id=FRESH','--input='+input]);
+ assert.equal(offline.status,0,offline.stderr+offline.stdout);
+ assert.deepEqual(JSON.parse(readFileSync(out)).results.map(r=>r.conversation_id),fresh.map(r=>r.conversation_id));
+ assert.equal(JSON.parse(readFileSync(out+'.provenance.json')).input_sha256,
+  createHash('sha256').update(JSON.stringify(fresh)).digest('hex'));
 });

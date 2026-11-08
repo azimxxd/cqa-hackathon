@@ -81,7 +81,11 @@ export function scorecard(s) {
                 (c) => c.section === section.id,
               );
               if (!criteria.length) return "";
-              return `<section class="cqa-criterion-section"><h3 class="caption-3 cqa-section-label">${e(section.title)}</h3>${criteria.map((crit) => criterionCard(crit, ev, s.appeals, s.role)).join("")}</section>`;
+              const sectionScore = ev.sections?.[section.id];
+              const subtotal = sectionScore
+                ? ` · ${score(sectionScore.points)} / ${score(sectionScore.max)}`
+                : "";
+              return `<section class="cqa-criterion-section"><h3 class="caption-3 cqa-section-label">${e(section.title)}${subtotal}</h3>${criteria.map((crit) => criterionCard(crit, ev, s.appeals, s.role)).join("")}</section>`;
             })
             .join(
               "",
@@ -121,8 +125,11 @@ function criterionCard(c, ev, appeals, role) {
   const appealAction = role === "reviewer"
     ? open ? `<button class="cqa-text-button button-Xsm" data-review="${e(open.id)}">Рассмотреть апелляцию${icon("arrow-up-right")}</button>` : ""
     : `<button class="cqa-text-button button-Xsm" data-appeal="${e(c.id)}" ${open ? "disabled" : ""}>${open ? "Апелляция открыта" : "Оспорить оценку"}${icon("arrow-up-right")}</button>`;
+  const decision = appeals.findLast((a) =>
+    a.evaluation_id === ev.id && a.criterion_id === c.id && a.decision,
+  )?.decision;
   const changed = JSON.stringify(row.original) !== JSON.stringify(row.final);
-  return `<details class="cqa-criterion cqa-result-${tone}" ${negative || partial ? "open" : ""}><summary><span class="cqa-result-icon">${icon(tone === "negative" ? "x" : tone === "partial" ? "warning-circle" : tone === "neutral" ? "dots-three" : "check")}</span><span class="cqa-criterion-title"><span class="title-4">${e(c.title)}</span><span class="caption-5 cqa-muted">${c.gross_error ? "Без баллов" : `Баллы: ${score(row.points)} · вес ${score(row.effective_weight)}%`}</span></span><span class="cqa-answer caption-3">${e(resultLabel(c, r))}</span>${icon("caret-down", "cqa-details-chevron")}</summary><div class="cqa-criterion-body"><p class="body-6">${e(r.explanation)}</p>${reviewNotes(r)}<div class="cqa-evidence">${(r.evidence_ids || []).map((id) => `<button class="cqa-evidence-chip caption-4" data-evidence="${e(id)}">${icon("chat-circle-text")}${e(id)}${icon("arrow-up-right")}</button>`).join("")}${r.checked_range ? `<button class="cqa-range caption-4" data-range-from="${e(r.checked_range.from)}" data-range-to="${e(r.checked_range.to)}">${icon("list-checks")}Участок ${e(r.checked_range.from)} – ${e(r.checked_range.to)}</button>` : ""}</div><div class="cqa-criterion-footer">${changed ? `<span class="caption-5 cqa-reviewed">${icon("check-circle")}Изменено проверяющим</span>` : open ? '<span class="caption-5 cqa-muted">Апелляция на рассмотрении</span>' : "<span></span>"}${appealAction}</div>${changed ? `<p class="cqa-original caption-5 cqa-muted">Ответ модели: ${e(resultLabel(c, row.original))}. ${e(row.original.explanation)}</p>` : ""}</div></details>`;
+  return `<details class="cqa-criterion cqa-result-${tone}" ${negative || partial ? "open" : ""}><summary><span class="cqa-result-icon">${icon(tone === "negative" ? "x" : tone === "partial" ? "warning-circle" : tone === "neutral" ? "dots-three" : "check")}</span><span class="cqa-criterion-title"><span class="title-4">${e(c.title)}</span><span class="caption-5 cqa-muted">${c.gross_error ? "Без баллов" : `Баллы: ${score(row.points)} · вес ${score(row.effective_weight)}%`}</span></span><span class="cqa-answer caption-3">${e(resultLabel(c, r))}</span>${icon("caret-down", "cqa-details-chevron")}</summary><div class="cqa-criterion-body"><p class="body-6">${e(r.explanation)}</p>${reviewNotes(r)}${decision ? `<p class="caption-2">Проверяющий ${decision.action === "change" ? "изменил оценку" : "подтвердил оценку"}. ${e(decision.reason)}</p>` : ""}<div class="cqa-evidence">${(r.evidence_ids || []).map((id) => `<button class="cqa-evidence-chip caption-4" data-evidence="${e(id)}">${icon("chat-circle-text")}${e(id)}${icon("arrow-up-right")}</button>`).join("")}${r.checked_range ? `<button class="cqa-range caption-4" data-range-from="${e(r.checked_range.from)}" data-range-to="${e(r.checked_range.to)}">${icon("list-checks")}Участок ${e(r.checked_range.from)} – ${e(r.checked_range.to)}</button>` : ""}</div><div class="cqa-criterion-footer">${changed ? `<span class="caption-5 cqa-reviewed">${icon("check-circle")}Изменено проверяющим</span>` : open ? '<span class="caption-5 cqa-muted">Апелляция на рассмотрении</span>' : "<span></span>"}${appealAction}</div>${changed ? `<p class="cqa-original caption-5 cqa-muted">Ответ модели: ${e(resultLabel(c, row.original))}. ${e(row.original.explanation)}</p>` : ""}</div></details>`;
 }
 export function appealsPage(s) {
   const open = s.appeals.filter((a) => a.status === "open");
@@ -163,7 +170,7 @@ export function checklistPage(s, drawer = false) {
     <form id="checklist-form">
       <section class="cqa-panel cqa-checklist-settings">
         <label class="cqa-field"><span class="title-4">Название</span><input name="name" value="${e(c.name)}" required></label>
-        <label class="cqa-field"><span class="title-4">Порог первого ответа, секунд</span><input name="threshold" type="number" min="0" step="any" value="${e(c.first_reaction_threshold_sec ?? 180)}" required></label>
+        <label class="cqa-field"><span class="title-4">Справочный порог первого ответа, секунд</span><input name="threshold" type="number" min="0" step="any" value="${e(c.first_reaction_threshold_sec ?? 180)}" required></label>
       </section>
       <div data-criteria>${c.criteria.map((v) => criterionEditor(v, c.sections)).join("")}</div>
       <button class="cqa-button cqa-secondary button-sm" type="button" data-editor="add-criterion" ${c.sections.length ? "" : "disabled"}>${icon("plus")}Добавить критерий</button>

@@ -48,6 +48,7 @@ export function appealRoutes(db) {
         `SELECT * FROM appeals ${req.query.status ? "WHERE status=?" : ""} ORDER BY id`,
       )
       .all(...(req.query.status ? [req.query.status] : []));
+    const findDecision = db.prepare("SELECT action, reason, decided_at FROM review_decisions WHERE appeal_id=?");
     res.json(
       rows.map((appeal) => {
         const evaluation = getEvaluation(db, appeal.evaluation_id);
@@ -77,6 +78,7 @@ export function appealRoutes(db) {
         });
         return {
           ...appeal,
+          decision: appeal.status === "decided" ? findDecision.get(appeal.id) ?? null : null,
           messages: messages.filter((_m, i) => indices.has(i)),
         };
       }),

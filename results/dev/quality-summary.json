@@ -1,20 +1,20 @@
 {
-  "note": "Agreement with the team's own development labels, not independent ground truth. The v16 prompt was tuned on these same dialogues, so expect lower agreement on new data.",
+  "note": "Agreement with historical team DEV labels, which used different interpretations for some criteria. This is not an independent test.",
   "model": "ollama/qwen3.6:35b-a3b",
-  "prompt_version": "v16",
+  "prompt_version": "v18",
   "conversations": 65,
   "criteria": 520,
   "status_ok": 65,
   "status_error": 0,
-  "overall_agreement": 0.958,
+  "overall_agreement": 0.912,
   "per_criterion": {
-    "contact": 1.0,
-    "discovery": 0.908,
+    "contact": 1,
+    "discovery": 0.892,
     "identification": 0.969,
-    "consultation": 0.969,
-    "empathy": 0.954,
-    "dialogue": 0.892,
-    "closure": 0.985,
-    "critical": 0.985
+    "consultation": 0.954,
+    "empathy": 1,
+    "dialogue": 0.677,
+    "closure": 0.8,
+    "critical": 1
   }
 }

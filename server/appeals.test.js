@@ -90,6 +90,9 @@ test("appeal cycle preserves original and atomically changes final; invalid deci
         reason: "Correct",
       });
       assert.equal(confirmed.body.total, 85.38);
+      const decisions = (await request("/appeals?status=decided")).body.map(({ decision }) => decision);
+      assert.deepEqual(decisions.map(({ action, reason }) => [action, reason]),
+        [["change", "Verified greeting"], ["confirm", "Correct"]]);
       assert.equal(
         db.prepare("SELECT COUNT(*) n FROM review_decisions").get().n,
         2,

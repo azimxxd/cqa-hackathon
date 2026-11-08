@@ -105,15 +105,38 @@ export function openDatabase(
       action TEXT NOT NULL CHECK(action IN ('confirm', 'change')), new_answer TEXT,
       new_scale_value REAL, reason TEXT NOT NULL, decided_at TEXT NOT NULL);
   `);
-  if (!getChecklist(db))
-    saveChecklist(
-      db,
-      JSON.parse(
-        readFileSync(
-          new URL("../shared/checklist.default.json", import.meta.url),
-          "utf8",
-        ),
-      ),
-    );
+  const official = JSON.parse(
+    readFileSync(new URL("../shared/checklist.default.json", import.meta.url), "utf8"),
+  );
+  if (!getChecklist(db)) {
+    saveChecklist(db, official);
+  } else {
+    // Keep existing checklist versions and their scores intact.
+    const legacy = getChecklist(db, 1)?.criteria.find(({ id }) => id === "c06");
+    if (legacy?.description.endsWith("Порог первой реакции — 3 минуты; теги и вложения в оценку не входят.")) {
+      transaction(db, () => {
+        const correction = official.criteria.find(({ id }) => id === "c06");
+        const candidates = db.prepare("SELECT data FROM checklist_versions").all();
+        const exists = candidates.some(({ data }) => {
+          const version = JSON.parse(data);
+          return version.name === official.name &&
+            version.rounding === official.rounding &&
+            version.first_reaction_threshold_sec === official.first_reaction_threshold_sec &&
+            version.criteria.length === official.criteria.length &&
+            official.criteria.every((expected, i) => {
+              const actual = version.criteria[i];
+              return actual.id === expected.id &&
+                actual.section === expected.section &&
+                actual.weight === expected.weight &&
+                actual.na_allowed === expected.na_allowed &&
+                actual.scores_points === expected.scores_points &&
+                actual.gross_error === expected.gross_error &&
+                criterionHash(actual) === criterionHash(expected);
+            });
+        });
+        if (!exists && correction.description !== legacy.description) saveChecklist(db, official);
+      });
+    }
+  }
   return db;
 }

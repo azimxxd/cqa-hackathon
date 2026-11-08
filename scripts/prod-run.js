@@ -2,19 +2,19 @@
 // Usage: npm run prod -- --group_id=<exact id from organizers> [--dataset=PROD] [--checklist_version_id=1]
 //        [--source=final] [--reevaluate=failed|all|none] [--output=results/prod/results.json]
 // Never invents IDs or scores: every step stops on the first error.
-import { mkdirSync, writeFileSync, renameSync } from "node:fs";
+import { mkdirSync, writeFileSync, renameSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { evaluationConfig, configHash } from "../ai/config.js";
 import { evaluationIsCurrent } from "../server/evaluation-freshness.js";
-import { getChecklist } from "../server/db.js";
 import { getConversation } from "../server/import.js";
 import { openDatabase } from "../server/db.js";
 import { importGroup } from "../server/import.js";
 import { createJobService } from "../server/jobs.js";
 import { buildSubmission, validateSubmission } from "../shared/submission.js";
 import { compositionWarnings, datasetComposition, datasetRecords } from "../eval/dataset.js";
-import { modelName, PROMPT_VERSION } from "../ai/evaluate.js";
+import { PROMPT_VERSION } from "../ai/evaluate.js";
+import { submissionChecklist, controlModel } from "./control-config.js";
 
 const args = Object.fromEntries(process.argv.slice(2).map((x) => {
   const i = x.indexOf("=");
@@ -34,17 +34,31 @@ const db = openDatabase();
 let jobs;
 try {
   if (process.env.CQA_FAKE_LLM === "1") throw Error("Test provider cannot produce a submission");
+  if (args.source && !["original", "final"].includes(args.source)) throw Error("Invalid source");
+  const checklist = submissionChecklist(db, args.checklist_version_id);
+  const version = checklist.id;
   const config = evaluationConfig();
-  const model = modelName();
+  const model = await controlModel();
+  log("config", { model, checklist_version_id: version, samples: config.samples });
   // 1. Import and keep the exact organizer body for ID/evidence validation.
   let body;
+  const input = args.input ? JSON.parse(readFileSync(resolve(args.input), "utf8")) : null;
   const fetchImpl = async (...a) => {
+    if (args.input) {
+      body = input;
+      // Accept both an organizer API response and an array of original records.
+      const records = datasetRecords(input);
+      return Response.json(Array.isArray(input)
+        ? { isSuccess: true, data: { dataset_group_id: group, total_records: records.length, records } }
+        : input);
+    }
     const response = await fetch(...a);
     const text = await response.text();
     try { body = JSON.parse(text); } catch {}
     return new Response(text, { status: response.status, headers: response.headers });
   };
-  const imported = await importGroup(db, group, { fetchImpl });
+  const imported = await importGroup(db, group, { fetchImpl,
+    ...(args.input ? { url: "https://local-input.invalid/" } : {}) });
   const records = datasetRecords(body);
   const sourceFile = resolve(`data/${dataset.toLowerCase()}-${group.replace(/[^\w.-]/g, "_")}.json`);
   mkdirSync(dirname(sourceFile), { recursive: true });
@@ -59,12 +73,8 @@ try {
     process.exitCode = 1;
   } else {
     // 3. Evaluate what is missing (or failed) with the provider from .env.
-    const version = Number(args.checklist_version_id ||
-      db.prepare("SELECT id FROM checklist_versions ORDER BY id DESC LIMIT 1").get()?.id);
     const latest = db.prepare(
       "SELECT id,status,model,data,created_at FROM evaluations WHERE conversation_id=? AND checklist_version_id=? ORDER BY id DESC LIMIT 1");
-    const checklist = getChecklist(db, version);
-    if (!checklist) throw Error("Unknown checklist version");
     const current = id => evaluationIsCurrent(latest.get(id, version), {
       model, promptVersion: PROMPT_VERSION, config, checklist, conversation: getConversation(db, id),
     });
@@ -72,9 +82,9 @@ try {
       if (reevaluate === "all") return true;
       return reevaluate === "failed" ? !current(id) : false;
     });
-    log("evaluate", { model: process.env.CQA_FAKE_LLM === "1" ? "fake" : modelName(), checklist_version_id: version, todo: ids.length });
+    log("evaluate", { model, checklist_version_id: version, todo: ids.length });
     if (ids.length) {
-      jobs = createJobService(db, { config });
+      jobs = createJobService(db, { config, model });
       const { job_id } = await jobs.submit({ checklist_version_id: version, conversation_ids: ids });
       let state;
       do {
@@ -99,6 +109,10 @@ try {
       console.error(JSON.stringify({ ready: false, errors: report.errors, warnings: report.warnings }, null, 2));
       process.exitCode = 1;
     } else {
+      const exportErrors = report.document.results.filter(row => row.status === "error");
+      if (exportErrors.length && !args["allow-errors"]) {
+        throw Error(`Export contains errors: ${exportErrors.map(row => row.conversation_id).join(", ")}`);
+      }
       const out = resolve(args.output || `results/${dataset.toLowerCase()}/results.json`);
       mkdirSync(dirname(out), { recursive: true });
 
