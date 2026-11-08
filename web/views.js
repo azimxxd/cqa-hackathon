@@ -73,7 +73,7 @@ export function scorecard(s) {
       }).length
     : 0;
   return `<div class="cqa-score-ledger"><div><p class="caption-2 cqa-muted">Итоговая оценка</p><strong class="heading-3 cqa-numeric">${score(ev?.total)}</strong><span class="body-6 cqa-muted"> / 100</span></div><div>${statusBadge(ev?.status)}${actions}</div><p class="caption-2 cqa-muted">${assessed ? `Требуют внимания: ${failed} из ${checklist.criteria.length}` : ""}</p>${versionSelect(s, "detail-version", checklist.id)}<div id="assessment-basis" class="caption-2 cqa-muted" aria-live="polite">${assessmentBasis(s)}</div></div>
-    <section class="cqa-evaluation"><div class="cqa-evaluation-heading"><div><h2 class="heading-6">Оценка по критериям</h2><p class="caption-2 cqa-muted">Нажмите на доказательство, чтобы найти реплику</p></div><span class="cqa-count caption-4">${checklist.criteria.length}</span></div>${
+    <section class="cqa-evaluation"><div class="cqa-evaluation-heading"><div><h2 class="heading-6">Оценка по критериям</h2><p class="caption-2 cqa-muted">Нажмите на доказательство, чтобы найти реплику. Чтобы оспорить оценку, раскройте критерий</p></div><span class="cqa-count caption-4">${checklist.criteria.length}</span></div>${
       assessed
         ? `${ev.gross_error ? `<div class="cqa-inline-warning body-6">${icon("warning-circle")}Обнаружена грубая ошибка. Она отмечается отдельно от баллов.</div>` : ""}${checklist.sections
             .map((section) => {
@@ -151,8 +151,10 @@ export function appealsPage(s) {
           )
           .join("")}</div>`
       : emptyState(
-          s.appealFilter === "open" ? "Все вопросы решены" : "Решений пока нет",
-          s.appealFilter === "open"
+          !s.appeals.length ? "Апелляций пока нет" : s.appealFilter === "open" ? "Все вопросы решены" : "Решений пока нет",
+          !s.appeals.length
+            ? "Откройте диалог, раскройте критерий и нажмите «Оспорить оценку». Апелляция появится здесь, её рассмотрит проверяющий."
+            : s.appealFilter === "open"
             ? "Новые апелляции появятся здесь. Вы можете создать их в карточке диалога."
             : "Здесь будут апелляции после решения проверяющего.",
           `<a class="cqa-button cqa-secondary button-sm" href="#dialogs">${icon("arrow-left")}К диалогам</a>`,
