@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>CQA — Saw-cell</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --ink:#242827; --muted:#687169; --border:#e4e8e5; --canvas:#f5f6f6;
+    --green:#2f6844; --accent:#a4df73; --soft:#eef6e7; --white:#fff;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { background:var(--canvas); }
+  body { font-family:-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif; color:var(--ink);
+         -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .slide { width:1280px; height:720px; padding:64px 80px; position:relative; overflow:hidden;
+           page-break-after:always; break-after:page; background:var(--canvas); display:flex; flex-direction:column; }
+  .slide:last-child { page-break-after:auto; break-after:auto; }
+  .kicker { font-size:15px; letter-spacing:.14em; text-transform:uppercase; color:var(--green); font-weight:700; margin-bottom:14px; }
+  h1 { font-size:76px; line-height:1.02; letter-spacing:-.02em; font-weight:800; }
+  h2 { font-size:44px; line-height:1.1; letter-spacing:-.015em; font-weight:800; margin-bottom:34px; }
+  p.lead { font-size:24px; line-height:1.45; color:var(--muted); max-width:900px; }
+  .foot { position:absolute; left:80px; right:80px; bottom:30px; display:flex; justify-content:space-between;
+          font-size:13px; color:var(--muted); letter-spacing:.04em; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--accent); margin-right:8px; vertical-align:middle; }
+
+  /* title */
+  .title { background:var(--green); color:#fff; justify-content:center; }
+  .title .kicker { color:var(--accent); }
+  .title p.lead { color:#d7e6da; margin-top:28px; }
+  .title .foot { color:#bcd3c1; }
+  .title .blob { position:absolute; right:-140px; top:-140px; width:560px; height:560px; border-radius:50%; background:var(--accent); opacity:.18; }
+  .title .blob2 { position:absolute; right:120px; bottom:-220px; width:420px; height:420px; border-radius:50%; border:2px solid var(--accent); opacity:.35; }
+
+  .grid { display:grid; gap:22px; }
+  .g2 { grid-template-columns:1fr 1fr; } .g3 { grid-template-columns:repeat(3,1fr); } .g4 { grid-template-columns:repeat(4,1fr); }
+  .card { background:var(--white); border:1px solid var(--border); border-radius:18px; padding:26px 28px; }
+  .card h3 { font-size:22px; margin-bottom:10px; letter-spacing:-.01em; }
+  .card p, .card li { font-size:17px; line-height:1.5; color:var(--muted); }
+  .card ul { padding-left:20px; } .card li { margin-bottom:6px; }
+  .card.hl { background:var(--soft); border-color:#cfe6bb; }
+  .num { font-size:15px; font-weight:800; color:var(--green); background:var(--soft); border-radius:8px; padding:4px 10px; display:inline-block; margin-bottom:12px; }
+
+  /* pipeline */
+  .flow { display:flex; align-items:stretch; gap:0; margin-top:6px; }
+  .step { flex:1; background:#fff; border:1px solid var(--border); border-radius:16px; padding:20px 18px; }
+  .step b { display:block; font-size:19px; margin-bottom:8px; }
+  .step span { font-size:15px; color:var(--muted); line-height:1.45; display:block; }
+  .step.ai { background:var(--green); color:#fff; border-color:var(--green); }
+  .step.ai span { color:#d7e6da; }
+  .arrow { width:34px; display:flex; align-items:center; justify-content:center; color:var(--green); font-size:26px; font-weight:800; flex:none; }
+
+  table { width:100%; border-collapse:collapse; font-size:18px; background:#fff; border-radius:16px; overflow:hidden; border:1px solid var(--border); }
+  th, td { text-align:left; padding:12px 20px; border-bottom:1px solid var(--border); }
+  th { font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); background:#fafbfa; }
+  td.w { font-weight:800; color:var(--green); width:110px; }
+  td.na { color:var(--muted); width:110px; }
+  tr:last-child td { border-bottom:none; }
+  .bar { height:8px; background:var(--accent); border-radius:4px; display:inline-block; vertical-align:middle; }
+
+  .big { font-size:96px; font-weight:800; letter-spacing:-.03em; color:var(--green); line-height:1; }
+  .bigl { font-size:17px; color:var(--muted); margin-top:10px; line-height:1.4; }
+  .mono { font-family: "SF Mono", Menlo, monospace; font-size:15px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 20px; color:var(--ink); line-height:1.6; }
+  .tag { display:inline-block; font-size:13px; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--soft); color:var(--green); margin-right:6px; }
+  .tag.warn { background:#fff3dc; color:#8a5a00; }
+</style>
+</head>
+<body>
+
+<!-- 1 -->
+<section class="slide title">
+  <div class="blob"></div><div class="blob2"></div>
+  <div class="kicker">Хакатон Freedom Broker · команда Saw-cell</div>
+  <h1>CQA —<br>Conversation Quality<br>Analytics</h1>
+  <p class="lead">Автоматическая оценка работы операторов в чатах и звонках по настраиваемому чек-листу — с доказательствами, апелляциями и пересчётом итога.</p>
+  <div class="foot"><span>Азамат · Нурлат · Алдияр</span><span>2026</span></div>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="kicker">Задача</div>
+  <h2>Ручной контроль качества не масштабируется</h2>
+  <div class="grid g2" style="gap:28px">
+    <div class="card">
+      <h3>Как сейчас</h3>
+      <ul>
+        <li>Проверяющий читает чат или слушает звонок целиком</li>
+        <li>Выборочная проверка — малая доля диалогов</li>
+        <li>Оценки разных людей расходятся, обоснования нет</li>
+        <li>Спорить с оценкой сложно — непонятно, на что ссылаться</li>
+      </ul>
+    </div>
+    <div class="card hl">
+      <h3>Что делает CQA</h3>
+      <ul>
+        <li>Оценивает <b>каждый</b> диалог по 8 критериям официального чек-листа</li>
+        <li>Каждый ответ — с обоснованием и ссылкой на реплику / момент записи</li>
+        <li>Оператор подаёт апелляцию, проверяющий решает, итог пересчитывается</li>
+        <li>RU / KZ / EN, чаты и звонки, итог 0–100</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>02</span></div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div class="kicker">Как это работает</div>
+  <h2>Путь диалога от API до итоговой оценки</h2>
+  <div class="flow">
+    <div class="step"><b>1. Импорт</b><span>Диалоги из API организаторов по <code>group_id</code>. Звонки расшифровываются (faster-whisper / Gemini).</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>2. Очередь</b><span>Express + SQLite. Задания оцениваются параллельно, настройки модели фиксируются.</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>3. Факты кодом</b><span>Паузы, первая реакция, ожидание, идентификация — считаются без модели.</span></div>
+    <div class="arrow">→</div>
+    <div class="step ai"><b>4. Модель</b><span>Промпт из активного чек-листа + факты. Qwen локально или Gemini.</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>5. Проверка</b><span>Ответ валидируется кодом. Ошибка → 1 повтор с обратной связью.</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>6. Итог</b><span>Баллы по весам, N/A с перераспределением, флаг грубой ошибки.</span></div>
+  </div>
+  <div class="grid g3" style="margin-top:30px">
+    <div class="card"><h3>Сервер</h3><p>Express API, встроенный <code>node:sqlite</code>, очередь, расчёт, апелляции, экспорт.</p></div>
+    <div class="card"><h3>AI-слой</h3><p>Промпт, правила по критериям, провайдеры Ollama/Gemini, валидация, расшифровка.</p></div>
+    <div class="card"><h3>Интерфейс</h3><p>Чистый HTML/CSS/JS, готов к встраиванию в Dynamics 365.</p></div>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>03</span></div>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="kicker">Оценка одного диалога</div>
+  <h2>Модель не выдумывает — каждое её слово проверяется</h2>
+  <div class="grid g2" style="gap:28px">
+    <div class="grid" style="gap:16px">
+      <div class="card"><span class="num">Строгая валидация</span><p>ID реплик существуют, значение из шкалы, N/A — только где разрешено, для «Нет» указан проверенный участок.</p></div>
+      <div class="card"><span class="num">Повтор, не подмена</span><p>Невалидный ответ → одна попытка с обратной связью → явная ошибка. Выдуманных оценок нет.</p></div>
+      <div class="card"><span class="num">Проверка цитат</span><p>Цитаты, которых нет в диалоге, получают бейдж <span class="tag warn">Требует проверки</span></p></div>
+    </div>
+    <div class="grid" style="gap:16px">
+      <div class="card"><span class="num">Защита от prompt injection</span><p>Текст диалога передаётся модели как недоверенные данные.</p></div>
+      <div class="card"><span class="num">Самосогласованность</span><p><code>LLM_SAMPLES=3</code>: несколько прогонов и голосование по да/нет/N/A, нижняя медиана по шкале.</p></div>
+      <div class="mono">c04 · Консультация · <b>Нет</b> · 0 / 20<br>
+        «Оператор не ответил про комиссию, см. <u>m010</u>»<br>
+        <span style="color:var(--muted)">→ клик по m010 прокручивает чат к реплике</span></div>
+    </div>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>04</span></div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div class="kicker">Чек-лист</div>
+  <h2>8 критериев, веса и N/A — всё настраивается</h2>
+  <div class="grid" style="grid-template-columns:1.35fr 1fr; gap:28px">
+    <table>
+      <tr><th>Критерий</th><th>Вес</th><th>N/A</th></tr>
+      <tr><td>c01 · Установление контакта</td><td class="w"><span class="bar" style="width:20px"></span> 10</td><td class="na">—</td></tr>
+      <tr><td>c02 · Выявление потребности</td><td class="w"><span class="bar" style="width:30px"></span> 15</td><td class="na">можно</td></tr>
+      <tr><td>c03 · Идентификация</td><td class="w"><span class="bar" style="width:40px"></span> 20</td><td class="na">можно</td></tr>
+      <tr><td>c04 · Консультация</td><td class="w"><span class="bar" style="width:40px"></span> 20</td><td class="na">можно</td></tr>
+      <tr><td>c05 · Эмпатия</td><td class="w"><span class="bar" style="width:30px"></span> 15</td><td class="na">—</td></tr>
+      <tr><td>c06 · Управление диалогом</td><td class="w"><span class="bar" style="width:30px"></span> 15</td><td class="na">—</td></tr>
+      <tr><td>c07 · Завершение</td><td class="w"><span class="bar" style="width:10px"></span> 5</td><td class="na">можно</td></tr>
+      <tr><td>c08 · Грубые ошибки</td><td class="w">флаг</td><td class="na">—</td></tr>
+    </table>
+    <div class="grid" style="gap:16px; align-content:start">
+      <div class="card hl"><h3>Промпт строится из чек-листа</h3><p>Критерии нигде не захардкожены — промпт собирается из активной версии.</p></div>
+      <div class="card"><h3>Редактор версий</h3><p>Заменили критерий → новая версия → модель переоценивает <b>только изменённые</b> критерии.</p></div>
+      <div class="card"><h3>Расчёт итога</h3><p>Шкала → баллы по весу, N/A исключается с перераспределением, округление до 2 знаков.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>05</span></div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="kicker">Доказательства и апелляции</div>
+  <h2>Каждую оценку можно проверить и оспорить</h2>
+  <div class="flow" style="margin-bottom:30px">
+    <div class="step"><b>Оценка</b><span>Ответ, баллы, вес и обоснование по каждому критерию</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Доказательство</b><span>Клик по реплике → прокрутка чата или перемотка записи звонка</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Апелляция</b><span>Оператор оспаривает критерий и оставляет комментарий</span></div>
+    <div class="arrow">→</div>
+    <div class="step ai"><b>Решение</b><span>Проверяющий видит фрагмент, подтверждает или меняет оценку</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Новый итог</b><span>Пересчёт; исходная оценка модели сохраняется</span></div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><h3>Прозрачность</h3><p>Оператор видит, за что снят балл, а не только цифру.</p></div>
+    <div class="card"><h3>История</h3><p>Оценка модели и решение человека хранятся раздельно — можно мерить точность.</p></div>
+    <div class="card"><h3>Звонки</h3><p>Плеер с переходом к нужному фрагменту записи по метке времени.</p></div>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>06</span></div>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="kicker">Модели</div>
+  <h2>Свой GPU или облако — одна переменная</h2>
+  <div class="grid g3">
+    <div class="card hl">
+      <span class="num">LLM_PROVIDER=ollama</span>
+      <h3>Qwen3.6-35B-A3B локально</h3>
+      <p>NVIDIA L40S + Ollama. Данные не покидают контур, $0 за вызов — платится только аренда GPU.</p>
+    </div>
+    <div class="card">
+      <span class="num">LLM_PROVIDER=gemini</span>
+      <h3>Gemini 3.1 Flash Lite</h3>
+      <p>Облако без своего железа. Стоимость считается по токенам каждого вызова и видна в интерфейсе.</p>
+    </div>
+    <div class="card">
+      <span class="num">LLM_PROVIDER=auto</span>
+      <h3>Автоматически</h3>
+      <p>Qwen, пока GPU-сервер отвечает (проверка каждые 20 с), иначе Gemini. Модель записывается в каждую оценку.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:22px">
+    <h3>Расшифровка звонков</h3>
+    <p>faster-whisper на том же GPU или Gemini audio — звонок превращается в реплики с метками времени и оценивается так же, как чат.</p>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>07</span></div>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <div class="kicker">Точность</div>
+  <h2>Сверка с ручной разметкой 65 DEV-диалогов</h2>
+  <div class="grid g4" style="margin-top:10px">
+    <div class="card"><div class="big">96%</div><div class="bigl">совпадение по критериям с разметкой</div></div>
+    <div class="card"><div class="big">2.6</div><div class="bigl">средняя ошибка итога (MAE) по шкале 0–100</div></div>
+    <div class="card"><div class="big">100%</div><div class="bigl">точность флага грубых ошибок</div></div>
+    <div class="card"><div class="big">6.7<span style="font-size:40px"> мин</span></div><div class="bigl">на все 65 диалогов, локально на L40S</div></div>
+  </div>
+  <div class="card" style="margin-top:26px">
+    <p>Модель: Qwen3.6-35B-A3B (Q4), промпт v16, <code>npm run eval</code>. Честно: разметку делала команда, и промпт улучшался на этих же диалогах — на новых данных точность ожидаемо ниже. Отчёты — <code>eval/reports/</code>.</p>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>08</span></div>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <div class="kicker">Демо и сдача</div>
+  <h2>Что можно посмотреть за 5 минут</h2>
+  <div class="grid g2" style="gap:28px">
+    <div class="grid" style="gap:12px">
+      <div class="card"><span class="num">1 · Диалоги</span><p>Импорт по group_id, фильтры по языку, каналу и итогу.</p></div>
+      <div class="card"><span class="num">2 · Карточка</span><p>8 критериев, обоснование, переход к реплике или моменту звонка.</p></div>
+      <div class="card"><span class="num">3 · Апелляция</span><p>Оспорить → решение проверяющего → пересчёт.</p></div>
+    </div>
+    <div class="grid" style="gap:12px; align-content:start">
+      <div class="card"><span class="num">4 · Чек-лист</span><p>Новая версия критерия и точечная переоценка.</p></div>
+      <div class="card"><span class="num">5 · Сдача жюри</span><p>Полнота, ошибки, готовый <code>results.json</code> (JSON 1.0, строгая проверка).</p></div>
+      <div class="mono">npm run prod -- --group_id=&lt;id&gt;<br><span style="color:var(--muted)">импорт → оценка → экспорт → валидация</span></div>
+    </div>
+  </div>
+  <div class="foot"><span><span class="dot"></span>CQA · Saw-cell</span><span>09</span></div>
+</section>
+
+<!-- 10 -->
+<section class="slide title">
+  <div class="blob"></div><div class="blob2"></div>
+  <div class="kicker">Команда Saw-cell</div>
+  <h1>Спасибо!</h1>
+  <div class="grid g3" style="margin-top:44px; max-width:960px">
+    <div><div style="font-size:26px;font-weight:800">Азамат</div><div style="color:#d7e6da;font-size:17px;margin-top:6px">Сервер, БД, расчёт итога, интеграция, GPU-контур</div></div>
+    <div><div style="font-size:26px;font-weight:800">Нурлат</div><div style="color:#d7e6da;font-size:17px;margin-top:6px">Интерфейс и UX</div></div>
+    <div><div style="font-size:26px;font-weight:800">Алдияр</div><div style="color:#d7e6da;font-size:17px;margin-top:6px">Оценка моделью, промпт, метрика точности</div></div>
+  </div>
+  <div class="foot"><span>CQA — Conversation Quality Analytics</span><span>Freedom Broker · 2026</span></div>
+</section>
+
+</body>
+</html>

@@ -13,6 +13,35 @@
 - **Локальная модель на собственном GPU** или облачный Gemini — переключение одной переменной.
 - **Экспорт для жюри** в формате JSON 1.0 со строгой проверкой.
 
+## Для жюри
+
+| Что | Где |
+|---|---|
+| **Живое демо** | **https://farmer-marine-sur-restored.trycloudflare.com** — 65 DEV-диалогов уже оценены, модель Qwen3.6-35B работает на нашем GPU (NVIDIA L40S) |
+| Результаты DEV | [`results/dev/results.json`](results/dev/results.json) + происхождение [`results.json.provenance.json`](results/dev/results.json.provenance.json) |
+| Результаты PROD | [`results/prod/`](results/prod/) |
+| Презентация | [`docs/presentation/CQA_Saw-cell.pdf`](docs/presentation/CQA_Saw-cell.pdf) |
+| Как устроена оценка | [раздел ниже](#как-устроена-оценка), точность — [здесь](#точность) |
+
+В демо можно: открыть диалог и кликнуть по реплике в обосновании, подать апелляцию
+и решить её в роли «Проверяющий», изменить критерий в редакторе чек-листа и
+переоценить выборку, выгрузить JSON на экране «Экспорт для жюри».
+
+> Демо работает, пока включён GPU-сервер. Если ссылка не открывается — напишите нам,
+> поднимем за пару минут (адрес при перезапуске может смениться).
+
+**Запуск у себя без нашего GPU:**
+
+```sh
+git clone https://github.com/azimxxd/cqa-hackathon.git && cd cqa-hackathon
+npm install && cp .env.example .env
+# в .env: ORG_API_URL=<ссылка из гайда>, GEMINI_API_KEY=<ваш ключ>
+npm start                          # http://localhost:3000 → «Импортировать» по group_id
+```
+
+Без ключа модели интерфейс открывается в демо-режиме `CQA_FAKE_LLM=1 npm start`
+(оценки помечены FAKE и ненастоящие).
+
 ## Быстрый старт
 
 Нужен Node.js ≥ 22.13 (используется встроенный `node:sqlite`, внешней БД нет).
